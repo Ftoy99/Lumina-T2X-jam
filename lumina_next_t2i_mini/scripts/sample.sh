@@ -3,13 +3,13 @@
 
 # Lumina-Next supports any resolution (up to 2K)
 # res="1024:024x1024 1536:1536x1536 1664:1664x1664 1792:1792x1792 2048:2048x2048"
-res=512:512x512
+res=512:512x
 t=4
 cfg=4.0
 seed=69
 steps=20
 solver=midpoint
-model_dir=Lumina-Next-SFT/consolidated.00-of-01.safetensors
+model_dir=Lumina-Next-SFT
 cap_dir=your/caption/dir/here
 out_dir=output
 python -u sample.py --ckpt ${model_dir} \
