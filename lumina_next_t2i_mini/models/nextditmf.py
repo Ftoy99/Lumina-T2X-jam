@@ -887,6 +887,7 @@ class NextDiT(nn.Module):
         combinedmf = torch.cat([halfmf, halfmf], dim=0)
         model_out = self(combined, combinedmf, t, cap_feats, cap_mask)
         model_out_x, model_out_xmf = model_out
+        print("with cfg out 2")
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
         # This can be done by uncommenting the following line and commenting-out the line following that.

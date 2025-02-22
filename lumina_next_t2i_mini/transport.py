@@ -112,5 +112,5 @@ class ODE:
 
         t = self.t.to(device)
         xcomb = (x, xmf)
-        samples = odeint(_fn, x, t, method=self.sampler_type)
+        samples = odeint(_fn, xcomb, t, method=self.sampler_type)
         return samples
