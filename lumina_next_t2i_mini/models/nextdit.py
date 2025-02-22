@@ -13,7 +13,6 @@ import functools
 import math
 from typing import List, Optional, Tuple
 
-from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input  # noqa
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
