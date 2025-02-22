@@ -757,7 +757,7 @@ class NextDiT(nn.Module):
             freqs_cis = torch.stack(padded_freqs_cis, dim=0)
             return x_embed, mask, img_size, freqs_cis
 
-    def forward(self, x, t, cap_feats, cap_mask):
+    def forward(self, x,xmf, t, cap_feats, cap_mask):
         """
         Forward pass of NextDiT.
         t: (N,) tensor of diffusion timesteps
@@ -790,6 +790,7 @@ class NextDiT(nn.Module):
     def forward_with_cfg(
         self,
         x,
+        xmf,
         t,
         cap_feats,
         cap_mask,
