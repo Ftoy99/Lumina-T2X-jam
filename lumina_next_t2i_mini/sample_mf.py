@@ -186,6 +186,10 @@ def main(args, rank, master_port):
                 # Latent Motion Noise
                 zmf = torch.randn([1, 4, latent_w, latent_h], device="cuda").to(dtype)
                 zmf = zmf.repeat(n * 2, 1, 1, 1)
+
+                print(f"debug1 z.shape{z.shape}")
+                print(f"debug1 zmf.shape{zmf.shape}")
+
                 print(f"Latent shape {z.shape}")
 
                 with torch.no_grad():
