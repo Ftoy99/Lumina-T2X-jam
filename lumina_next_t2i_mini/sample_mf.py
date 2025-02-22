@@ -224,7 +224,7 @@ def main(args, rank, master_port):
                 samples = (samples + 1.0) / 2.0
                 samples.clamp_(0.0, 1.0)
 
-                samples_xmf = vae.decode(samples_xmf / factor).samples_xmf
+                samples_xmf = vae.decode(samples_xmf / factor).sample
                 samples_xmf = (samples_xmf + 1.0) / 2.0
                 samples_xmf.clamp_(0.0, 1.0)
 
