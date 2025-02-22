@@ -98,7 +98,25 @@ class ODE:
         # sol = odeint(f, x0, t, method='euler', args=(omega,))
         # sol = odeint(lambda y, t: f(y, t, omega), x0, t, method='euler')
         # Samples
-        samples_x = odeint(lambda y, t: _fn(y, t, xmf), x, t, method=self.sampler_type)  # holy shit
+        # samples_x = odeint(lambda y, t: _fn(y, t, xmf), x, t, method=self.sampler_type)  # holy shit
+        # Use Midpoint method for integration
+        for i in range(len(t) - 1):
+            dt = t[i + 1] - t[i]
 
+            # First stage (evaluate at the current time)
+            model_output, model_output_xmf = _fn(t[i], samples_x, samples_xmf)
+            k1_x = model_output
+            k1_xmf = model_output_xmf
+
+            # Second stage (evaluate at the midpoint)
+            midpoint_x = samples_x + 0.5 * k1_x * dt
+            midpoint_xmf = samples_xmf + 0.5 * k1_xmf * dt
+            model_output, model_output_xmf = _fn(t[i] + 0.5 * dt, midpoint_x, midpoint_xmf)
+            k2_x = model_output
+            k2_xmf = model_output_xmf
+
+            # Update the state using the midpoint approximation
+            samples_x = samples_x + k2_x * dt
+            samples_xmf = samples_xmf + k2_xmf * dt
         print(f"samples_x shape {samples_x.shape}")
         return samples_x
