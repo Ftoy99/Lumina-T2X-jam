@@ -86,11 +86,12 @@ class ODE:
         device = x[0].device if isinstance(x, tuple) else x.device
         print("in ode sample")
 
-        def _fn(t, x):
+        def _fn(t, x, xmf):
             t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
             model_output = model(x, t, **model_kwargs)
             return model_output
 
         t = self.t.to(device)
-        samples = odeint(_fn, x, t, method=self.sampler_type)
+        xcomb = (x, xmf)
+        samples = odeint(lambda t, xcomb: _fn(t, *xcomb), xcomb, t, method=self.sampler_type)
         return samples
