@@ -92,6 +92,11 @@ class ODE:
             return model_output
 
         t = self.t.to(device)
-        xcomb = (x, xmf)
-        samples = odeint(lambda t, xcomb: _fn(t, *xcomb), xcomb, t, method=self.sampler_type)
+        # samples = odeint(_fn, x, t, method=self.sampler_type)
+        # https://scicomp.stackexchange.com/questions/41905/passing-additional-arguments-to-odeint-from-torchdiffeq-to-solve-an-ivp
+
+        # sol = odeint(f, x0, t, method='euler', args=(omega,))
+        # sol = odeint(lambda y, t: f(y, t, omega), x0, t, method='euler')
+        # Samples
+        samples = odeint(lambda y, t: _fn(y, t, xmf), x, t, method=self.sampler_type)
         return samples
