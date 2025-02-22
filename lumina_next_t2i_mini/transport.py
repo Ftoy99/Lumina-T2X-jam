@@ -92,6 +92,7 @@ class ODE:
                 x, xmf = xcomb
                 print(type(x))
                 print(t)
+                print(th.ones(x.size(0)).to(device))
                 t = th.ones(x.size(0)).to(device) * t
                 t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
                 model_output, xmf_output = model(x, xmf, t, **model_kwargs)
