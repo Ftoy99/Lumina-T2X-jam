@@ -807,8 +807,6 @@ class NextDiT(nn.Module):
             return x_embed, xmf_embed, mask, img_size, freqs_cis
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
-        print(f"debug 3 forward x.shape {x.shape}")
-        print(f"debug 3 forward xmf.shape {xmf.shape}")
         """
         Forward pass of NextDiT.
         t: (N,) tensor of diffusion timesteps
@@ -846,20 +844,18 @@ class NextDiT(nn.Module):
         return x, xmf
 
     def forward_with_cfg(
-            self,
-            x,
-            xmf,
-            t,
-            cap_feats,
-            cap_mask,
-            cfg_scale,
-            scale_factor=1.0,
-            scale_watershed=1.0,
-            base_seqlen: Optional[int] = None,
-            proportional_attn: bool = False,
+        self,
+        x,
+        xmf,
+        t,
+        cap_feats,
+        cap_mask,
+        cfg_scale,
+        scale_factor=1.0,
+        scale_watershed=1.0,
+        base_seqlen: Optional[int] = None,
+        proportional_attn: bool = False,
     ):
-        print(f"debug 4 forward x.shape {x.shape}")
-        print(f"debug 4 forward xmf.shape {xmf.shape}")
         """
         Forward pass of NextDiT, but also batches the unconditional forward pass
         for classifier-free guidance.
@@ -884,18 +880,13 @@ class NextDiT(nn.Module):
                 layer.attention.proportional_attn = proportional_attn
 
         half = x[: len(x) // 2]
-        halfmf = xmf[: len(x) // 2]
         combined = torch.cat([half, half], dim=0)
-        combinedmf = torch.cat([halfmf, halfmf], dim=0)
-        #without cgf
-        model_out = self(combined, combinedmf, t, cap_feats, cap_mask)
-        model_out_x, model_out_xmf = model_out
-        print("with cfg out 2")
+        x_out,xmf_output = self(combined, t, cap_feats, cap_mask)
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
         # This can be done by uncommenting the following line and commenting-out the line following that.
         # eps, rest = model_out[:, :self.in_channels], model_out[:, self.in_channels:]
-        eps, rest = model_out_x[:, :3], model_out_x[:, 3:]
+        eps, rest = x_out[:, :3], x_out[:, 3:]
         cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
         half_eps = uncond_eps + cfg_scale * (cond_eps - uncond_eps)
         eps = torch.cat([half_eps, half_eps], dim=0)
