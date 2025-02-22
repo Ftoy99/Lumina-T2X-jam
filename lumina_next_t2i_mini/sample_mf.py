@@ -216,8 +216,7 @@ def main(args, rank, master_port):
                 # Forward
                 samples = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
                     z, zmf, model.forward_with_cfg, **model_kwargs
-                )
-                print(samples)
+                )[-1]
                 print(f"Sample shape {samples.shape}")
                 samples = samples[:1]
 
