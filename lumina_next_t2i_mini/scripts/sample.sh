@@ -10,7 +10,7 @@ seed=69
 steps=20
 solver=midpoint
 model_dir=Lumina-Next-SFT
-cap_dir=your/caption/dir/here
+cap_dir=captions.txt
 out_dir=output
 python -u sample.py --ckpt ${model_dir} \
 --image_save_path ${out_dir} \
