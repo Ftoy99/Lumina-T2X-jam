@@ -123,5 +123,4 @@ class ODE:
         xcomb = (x, xmf)
         # samples = odeint(_fn, xcomb, t, method=self.sampler_type)
         samples = _fn(t, xcomb)
-        print(f"samples {samples}")
         return samples
