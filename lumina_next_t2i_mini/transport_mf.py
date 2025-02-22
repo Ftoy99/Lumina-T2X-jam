@@ -92,9 +92,11 @@ class ODE:
 
             def _fn(t, xcomb):
                 x, xmf = xcomb
-                print(type(x)) # 2 4 128 128
+                # print(type(x)) # 2 4 128 128
+                # print(t)
+                # print(th.ones(x.size(0)).to(device))
                 print(t)
-                print(th.ones(x.size(0)).to(device))
+                print(x.shape)
                 t = th.ones(x.size(0)).to(device) * t
                 t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
                 model_output, xmf_output = model(x, xmf, t, **model_kwargs)
