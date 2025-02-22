@@ -83,6 +83,8 @@ class ODE:
         self.sampler_type = sampler_type
 
     def sample(self, x, xmf, model, **model_kwargs):
+        print(f"debug2 x.shape{x.shape}")
+        print(f"debug2 xmf.shape{xmf.shape}")
         device = x[0].device if isinstance(x, tuple) else x.device
 
         if not self.use_sd3:
