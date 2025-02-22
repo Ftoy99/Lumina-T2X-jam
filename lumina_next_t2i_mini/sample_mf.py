@@ -213,7 +213,7 @@ def main(args, rank, master_port):
                     model_kwargs["scale_watershed"] = 1.0
 
                 # Forward
-                samples,samples_xmf = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
+                samples = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
                     z, zmf, model.forward_with_cfg, **model_kwargs
                 )[-1]
                 samples = samples[:1]

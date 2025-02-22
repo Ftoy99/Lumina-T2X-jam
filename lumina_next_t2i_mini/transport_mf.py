@@ -89,7 +89,7 @@ class ODE:
         def _fn(t, x, xmf):
             t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
             model_output, model_output_xmf = model(x, xmf, t, **model_kwargs)
-            return model_output, model_output_xmf
+            return model_output
 
         t = self.t.to(device)
         # samples = odeint(_fn, x, t, method=self.sampler_type)
