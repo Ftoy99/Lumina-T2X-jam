@@ -807,7 +807,8 @@ class NextDiT(nn.Module):
             return x_embed, xmf_embed, mask, img_size, freqs_cis
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
-        print("In forward")
+        print(f"debug 3 forward x.shape {x.shape}")
+        print(f"debug 3 forward xmf.shape {xmf.shape}")
         """
         Forward pass of NextDiT.
         t: (N,) tensor of diffusion timesteps
@@ -857,7 +858,8 @@ class NextDiT(nn.Module):
             base_seqlen: Optional[int] = None,
             proportional_attn: bool = False,
     ):
-        print("In forward with cfg")
+        print(f"debug 4 forward x.shape {x.shape}")
+        print(f"debug 4 forward xmf.shape {xmf.shape}")
         """
         Forward pass of NextDiT, but also batches the unconditional forward pass
         for classifier-free guidance.
