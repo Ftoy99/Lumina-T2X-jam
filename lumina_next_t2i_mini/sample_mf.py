@@ -175,8 +175,14 @@ def main(args, rank, master_port):
                 w, h = int(w), int(h)
                 # Latent dimensions
                 latent_w, latent_h = w // 8, h // 8
+
+                # Latent picture noise
                 z = torch.randn([1, 4, latent_w, latent_h], device="cuda").to(dtype)
                 z = z.repeat(n * 2, 1, 1, 1)
+
+                # Latent Motion Noise
+                zmf = torch.randn([1, 4, latent_w, latent_h], device="cuda").to(dtype)
+                zmf = zmf.repeat(n * 2, 1, 1, 1)
                 print(f"Latent shape {z.shape}")
 
                 with torch.no_grad():
@@ -198,7 +204,7 @@ def main(args, rank, master_port):
                     model_kwargs["base_seqlen"] = None
 
                 if do_extrapolation and args.scaling_method == "Time-aware":
-                    model_kwargs["scale_factor"] = math.sqrt(w * h / train_args.image_size**2)
+                    model_kwargs["scale_factor"] = math.sqrt(w * h / train_args.image_size ** 2)
                     model_kwargs["scale_watershed"] = args.scaling_watershed
                 else:
                     model_kwargs["scale_factor"] = 1.0
@@ -206,7 +212,7 @@ def main(args, rank, master_port):
 
                 # Forward
                 samples = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
-                    z, model.forward_with_cfg, **model_kwargs
+                    z, zmf, model.forward_with_cfg, **model_kwargs
                 )[-1]
                 print(f"Sample shape {samples.shape}")
                 samples = samples[:1]
@@ -271,7 +277,7 @@ if __name__ == "__main__":
         type=str,
         default="samples",
         help="If specified, overrides the default image save path "
-        "(sample{_ema}.png in the model checkpoint directory).",
+             "(sample{_ema}.png in the model checkpoint directory).",
     )
     parser.add_argument(
         "--time_shifting_factor",
