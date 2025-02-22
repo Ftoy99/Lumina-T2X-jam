@@ -845,7 +845,12 @@ class NextDiT(nn.Module):
 
         half = x[: len(x) // 2]
         combined = torch.cat([half, half], dim=0)
-        out_x,out_xmf = self(combined, xmf, t, cap_feats, cap_mask)
+        out_x, out_xmf = self(combined, xmf, t, cap_feats, cap_mask)
+        output_x = self.cfg_calc(cfg_scale, out_x)
+        output_xmf = self.cfg_calc(cfg_scale, out_xmf)
+        return output_x, output_xmf
+
+    def cfg_calc(self, cfg_scale, out_x):
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
         # This can be done by uncommenting the following line and commenting-out the line following that.
@@ -854,8 +859,8 @@ class NextDiT(nn.Module):
         cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
         half_eps = uncond_eps + cfg_scale * (cond_eps - uncond_eps)
         eps = torch.cat([half_eps, half_eps], dim=0)
-
-        return torch.cat([eps, rest], dim=1)
+        output = torch.cat([eps, rest], dim=1)
+        return output
 
     @staticmethod
     def precompute_freqs_cis(
