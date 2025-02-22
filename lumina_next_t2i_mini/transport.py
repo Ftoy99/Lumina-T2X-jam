@@ -106,6 +106,7 @@ class ODE:
                 model_output = th.cat([model_output, model_output], dim=0)
                 return model_output
 
+        print(f"Timesteps {t}")
         t = self.t.to(device)
         samples = odeint(_fn, x, t, method=self.sampler_type)
         return samples
