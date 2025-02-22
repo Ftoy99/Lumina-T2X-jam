@@ -884,6 +884,7 @@ class NextDiT(nn.Module):
         combined = torch.cat([half, half], dim=0)
         combinedmf = torch.cat([halfmf, halfmf], dim=0)
         x_out, xmf_output = self(combined, combinedmf, t, cap_feats, cap_mask)
+        print(x_out.shape)
         print(x_out)
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
