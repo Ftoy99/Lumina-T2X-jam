@@ -887,6 +887,7 @@ class NextDiT(nn.Module):
         halfmf = xmf[: len(x) // 2]
         combined = torch.cat([half, half], dim=0)
         combinedmf = torch.cat([halfmf, halfmf], dim=0)
+        #without cgf
         model_out = self(combined, combinedmf, t, cap_feats, cap_mask)
         model_out_x, model_out_xmf = model_out
         print("with cfg out 2")

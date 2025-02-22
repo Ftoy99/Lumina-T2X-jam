@@ -83,41 +83,25 @@ class ODE:
         self.sampler_type = sampler_type
 
     def sample(self, x, xmf, model, **model_kwargs):
-        print(f"debug2 x.shape{x.shape}")
-        print(f"debug2 xmf.shape{xmf.shape}")
         device = x[0].device if isinstance(x, tuple) else x.device
 
         if not self.use_sd3:
-            print(f"self.use_sd3 {self.use_sd3}")
 
-            def _fn(t, xcomb):
-                x, xmf = xcomb
-                # print(type(x)) # 2 4 128 128
-                # print(t)
-                # print(th.ones(x.size(0)).to(device))
-                print(t)
-                for step in t:
-                    print(step)
-                    step = th.ones(x.size(0)).to(device) * step
-                    step = th.ones(x[0].size(0)).to(device) * step if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * step
-                    print(f"x shape before {x.shape}")
-                    print(f"x shape before {x.shape}")
-                    x, xmf = model(x, xmf, step, **model_kwargs)
-                    print(f"x shape after {x.shape}")
-                    print(f"x shape after {x.shape}")
-                return x, xmf
+            def _fn(t, x):
+                t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(
+                    device) * t
+                model_output = model(x, t, **model_kwargs)
+                return model_output
 
         else:
-            print(f"self.use_sd3 {self.use_sd3}")
             cfg_scale = model_kwargs["cfg_scale"]
             model_kwargs.pop("cfg_scale")
 
-            def _fn(t, xcomb):
-                print("in use_sd3 __fn")
-                x, xmf = xcomb
+            def _fn(t, x):
                 t = th.ones(x.size(0)).to(device) * t * 1000
                 half_x = x[: len(x) // 2]
                 x = th.cat([half_x, half_x], dim=0)
+                print(f"Forward 2")
                 model_output = model(hidden_states=x, timestep=t, **model_kwargs)[0]
                 uncond, cond = model_output.chunk(2, dim=0)
                 model_output = uncond + cfg_scale * (cond - uncond)
@@ -125,7 +109,5 @@ class ODE:
                 return model_output
 
         t = self.t.to(device)
-        xcomb = (x, xmf)
-        # samples = odeint(_fn, xcomb, t, method=self.sampler_type)
-        samples = _fn(t, xcomb)
+        samples = odeint(_fn, x, t, method=self.sampler_type)
         return samples

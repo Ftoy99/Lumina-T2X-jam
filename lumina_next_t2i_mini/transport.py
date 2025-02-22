@@ -89,14 +89,7 @@ class ODE:
         if not self.use_sd3:
 
             def _fn(t, x):
-                print(t)
-                print(x.shape)
                 t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
-                print(f"t after th.ones etc {t}")
-                # tensor(0.9102, device='cuda:0', dtype=torch.bfloat16)
-                # torch.Size([2, 4, 128, 128])
-                # t after th.ones etc tensor([0.9102, 0.9102], device='cuda:0')
-                print(f"Forward 1")
                 model_output = model(x, t, **model_kwargs)
                 return model_output
 
