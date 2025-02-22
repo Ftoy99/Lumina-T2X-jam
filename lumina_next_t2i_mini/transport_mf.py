@@ -100,6 +100,8 @@ class ODE:
         # Samples
         # samples_x = odeint(lambda y, t: _fn(y, t, xmf), x, t, method=self.sampler_type)  # holy shit
         # Use Midpoint method for integration
+        samples_x = x
+        samples_xmf = xmf
         for i in range(len(t) - 1):
             dt = t[i + 1] - t[i]
 
