@@ -95,7 +95,7 @@ class ODE:
                 # tensor(0.9102, device='cuda:0', dtype=torch.bfloat16)
                 # torch.Size([2, 4, 128, 128])
                 # t after th.ones etc tensor([0.9102, 0.9102], device='cuda:0')
-
+                print(f"Forward 1")
                 model_output = model(x, t, **model_kwargs)
                 return model_output
 
@@ -107,6 +107,7 @@ class ODE:
                 t = th.ones(x.size(0)).to(device) * t * 1000
                 half_x = x[: len(x) // 2]
                 x = th.cat([half_x, half_x], dim=0)
+                print(f"Forward 2")
                 model_output = model(hidden_states=x, timestep=t, **model_kwargs)[0]
                 uncond, cond = model_output.chunk(2, dim=0)
                 model_output = uncond + cfg_scale * (cond - uncond)
