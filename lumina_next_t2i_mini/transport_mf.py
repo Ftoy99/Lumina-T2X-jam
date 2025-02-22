@@ -98,6 +98,8 @@ class ODE:
                     print(step)
                     step = th.ones(x.size(0)).to(device) * step
                     step = th.ones(x[0].size(0)).to(device) * step if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * step
+                    print(x.shape)
+                    print(xmf.shape)
                     x, xmf = model(x, xmf, step, **model_kwargs)
                 return x, xmf
 
