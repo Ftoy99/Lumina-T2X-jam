@@ -105,6 +105,7 @@ def main(args, rank, master_port):
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
     # latent_size = train_args.image_size // 8
+    print(f"Model is train_args {train_args.model}")
     model = models.__dict__[train_args.model](
         qk_norm=train_args.qk_norm,
         cap_feat_dim=cap_feat_dim,
@@ -116,13 +117,14 @@ def main(args, rank, master_port):
         # assert train_args.model_parallel_size == args.num_gpus
         if args.ema:
             print("Loading ema model.")
+        print(f"load file {args}")
         ckpt = load_file(
             os.path.join(
                 args.ckpt,
                 f"consolidated{'_ema' if args.ema else ''}.{rank:02d}-of-{args.num_gpus:02d}.safetensors",
             )
         )
-        model.load_state_dict(ckpt, strict=True)
+        model.load_state_dict(ckpt, strict=False)
 
     sample_folder_dir = args.image_save_path
 
