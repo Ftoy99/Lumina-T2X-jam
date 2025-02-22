@@ -844,17 +844,17 @@ class NextDiT(nn.Module):
         return x, xmf
 
     def forward_with_cfg(
-        self,
-        x,
-        xmf,
-        t,
-        cap_feats,
-        cap_mask,
-        cfg_scale,
-        scale_factor=1.0,
-        scale_watershed=1.0,
-        base_seqlen: Optional[int] = None,
-        proportional_attn: bool = False,
+            self,
+            x,
+            xmf,
+            t,
+            cap_feats,
+            cap_mask,
+            cfg_scale,
+            scale_factor=1.0,
+            scale_watershed=1.0,
+            base_seqlen: Optional[int] = None,
+            proportional_attn: bool = False,
     ):
         """
         Forward pass of NextDiT, but also batches the unconditional forward pass
@@ -880,8 +880,10 @@ class NextDiT(nn.Module):
                 layer.attention.proportional_attn = proportional_attn
 
         half = x[: len(x) // 2]
+        halfmf = xmf[: len(xmf) // 2]
         combined = torch.cat([half, half], dim=0)
-        x_out,xmf_output = self(combined, t, cap_feats, cap_mask)
+        combinedmf = torch.cat([halfmf, halfmf], dim=0)
+        x_out, xmf_output = self(combined, combinedmf, t, cap_feats, cap_mask)
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
         # This can be done by uncommenting the following line and commenting-out the line following that.
