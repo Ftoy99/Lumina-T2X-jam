@@ -90,7 +90,7 @@ class ODE:
                 x, xmf = x_comb
                 t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(
                     device) * t
-                model_output = model(x, t, **model_kwargs)
+                model_output = model(x,xmf, t, **model_kwargs)
                 return model_output
 
         else:
