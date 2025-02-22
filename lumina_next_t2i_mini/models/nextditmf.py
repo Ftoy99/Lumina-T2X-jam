@@ -763,6 +763,7 @@ class NextDiT(nn.Module):
             return x_embed, mask, img_size, freqs_cis
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
+        print("in forward")
         """
         Forward pass of NextDiT.
         t: (N,) tensor of diffusion timesteps
@@ -800,6 +801,7 @@ class NextDiT(nn.Module):
             else:
                 x = [_.chunk(2, dim=0)[0] for _ in x]
                 xmf = [_.chunk(2, dim=0)[0] for _ in xmf]
+        print(f"Returning from forward with x = {x.shape} and xmf={xmf.shape}")
         return x, xmf
 
     def forward_with_cfg(
@@ -815,6 +817,7 @@ class NextDiT(nn.Module):
             base_seqlen: Optional[int] = None,
             proportional_attn: bool = False,
     ):
+        print("in forward_with_cfg")
         """
         Forward pass of NextDiT, but also batches the unconditional forward pass
         for classifier-free guidance.
@@ -853,8 +856,9 @@ class NextDiT(nn.Module):
         cond_eps, uncond_eps = torch.split(eps, len(eps) // 2, dim=0)
         half_eps = uncond_eps + cfg_scale * (cond_eps - uncond_eps)
         eps = torch.cat([half_eps, half_eps], dim=0)
-
-        return torch.cat([eps, rest], dim=1)
+        output = torch.cat([eps, rest], dim=1)
+        print(f"Returning from forward_with_cfg with output = {output.shape}")
+        return
 
     @staticmethod
     def precompute_freqs_cis(
