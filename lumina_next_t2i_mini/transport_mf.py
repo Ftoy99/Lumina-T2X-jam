@@ -84,6 +84,7 @@ class ODE:
 
     def sample(self, x, xmf, model, **model_kwargs):
         device = x[0].device if isinstance(x, tuple) else x.device
+        print("in ode sample")
         if not self.use_sd3:
             print("not  self.use_sd3")
             def _fn(t, x):
