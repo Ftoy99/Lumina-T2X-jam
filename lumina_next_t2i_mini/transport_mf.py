@@ -92,7 +92,7 @@ class ODE:
 
             def _fn(t, xcomb):
                 x, xmf = xcomb
-                print(type(x))
+                print(type(x)) # 2 4 128 128
                 print(t)
                 print(th.ones(x.size(0)).to(device))
                 t = th.ones(x.size(0)).to(device) * t
