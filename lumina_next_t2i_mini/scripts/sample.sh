@@ -3,7 +3,7 @@
 
 # Lumina-Next supports any resolution (up to 2K)
 # res="1024:024x1024 1536:1536x1536 1664:1664x1664 1792:1792x1792 2048:2048x2048"
-res=512:512x
+res=512:512x512
 t=4
 cfg=4.0
 seed=69
