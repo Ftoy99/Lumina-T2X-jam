@@ -187,11 +187,6 @@ def main(args, rank, master_port):
                 zmf = torch.randn([1, 4, latent_w, latent_h], device="cuda").to(dtype)
                 zmf = zmf.repeat(n * 2, 1, 1, 1)
 
-                print(f"debug1 z.shape{z.shape}")
-                print(f"debug1 zmf.shape{zmf.shape}")
-
-                print(f"Latent shape {z.shape}")
-
                 with torch.no_grad():
                     cap_feats, cap_mask = encode_prompt([caps_list] + [""], text_encoder, tokenizer, 0.0)
 
@@ -221,7 +216,6 @@ def main(args, rank, master_port):
                 samples = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
                     z, zmf, model.forward_with_cfg, **model_kwargs
                 )[-1]
-                print(f"Sample shape {samples.shape}")
                 samples = samples[:1]
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
