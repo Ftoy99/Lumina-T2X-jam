@@ -882,8 +882,10 @@ class NextDiT(nn.Module):
                 layer.attention.proportional_attn = proportional_attn
 
         half = x[: len(x) // 2]
+        halfmf = xmf[: len(x) // 2]
         combined = torch.cat([half, half], dim=0)
-        model_out = self(combined, t, cap_feats, cap_mask)
+        combinedmf = torch.cat([halfmf, halfmf], dim=0)
+        model_out = self(combined, combinedmf, t, cap_feats, cap_mask)
         # For exact reproducibility reasons, we apply classifier-free guidance on only
         # three channels by default. The standard approach to cfg applies it to all channels.
         # This can be done by uncommenting the following line and commenting-out the line following that.
