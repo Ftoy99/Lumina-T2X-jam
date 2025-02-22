@@ -100,6 +100,7 @@ class ODE:
             model_kwargs.pop("cfg_scale")
 
             def _fn(t, xcomb):
+                print("in use_sd3 __fn")
                 x, xmf = xcomb
                 t = th.ones(x.size(0)).to(device) * t * 1000
                 half_x = x[: len(x) // 2]
