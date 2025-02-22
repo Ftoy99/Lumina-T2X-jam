@@ -215,7 +215,7 @@ def main(args, rank, master_port):
                 # Forward
                 samples = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
                     z, zmf, model.forward_with_cfg, **model_kwargs
-                )[-1]
+                )
                 samples = samples[:1]
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
