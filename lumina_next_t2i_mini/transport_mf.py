@@ -98,5 +98,19 @@ class ODE:
         # sol = odeint(f, x0, t, method='euler', args=(omega,))
         # sol = odeint(lambda y, t: f(y, t, omega), x0, t, method='euler')
         # Samples
-        samples_x,model_output_xmf = odeint(lambda y, t: _fn(y, t, xmf), x, t, method=self.sampler_type)  # holy shit
+        # samples_x,model_output_xmf = odeint(lambda y, t: _fn(y, t, xmf), x, t, method=self.sampler_type)  # holy shit # piece of fucking shit fuck you
+
+        # Initialize the state
+        samples_x = x
+        samples_xmf = xmf
+
+        # Use Euler's method (or RK4, etc.) for integration
+        for i in range(len(t) - 1):
+            dt = t[i + 1] - t[i]
+            model_output, model_output_xmf = _fn(t[i], samples_x, samples_xmf)
+
+            # Update the state using the model outputs
+            samples_x = samples_x + model_output * dt  # Euler update
+            samples_xmf = samples_xmf + model_output_xmf * dt  # Euler update for xmf
+
         return samples_x
