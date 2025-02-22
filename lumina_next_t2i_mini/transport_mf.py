@@ -93,24 +93,23 @@ class ODE:
                 model_output = model(x, xmf, t, **model_kwargs)
                 flow, flowmf = model_output
                 return flow
-
-        else:
-            cfg_scale = model_kwargs["cfg_scale"]
-            model_kwargs.pop("cfg_scale")
-
-            def _fn(t, x_comb):
-                # TODO SHOULD DO
-                print("**************JIMMYS NOT IMPLEMENT MUST DO IF PASS FROM HERE**************")
-                x, xmf = x_comb
-                t = th.ones(x.size(0)).to(device) * t * 1000
-                half_x = x[: len(x) // 2]
-                x = th.cat([half_x, half_x], dim=0)
-                model_output = model(hidden_states=x, timestep=t, **model_kwargs)[0]
-                uncond, cond = model_output.chunk(2, dim=0)
-                model_output = uncond + cfg_scale * (cond - uncond)
-                model_output = th.cat([model_output, model_output], dim=0)
-                return model_output
-
+        #
+        # else:
+        #     cfg_scale = model_kwargs["cfg_scale"]
+        #     model_kwargs.pop("cfg_scale")
+        #
+        #     def _fn(t, x_comb):
+        #         # TODO SHOULD DO
+        #         print("**************JIMMYS NOT IMPLEMENT MUST DO IF PASS FROM HERE**************")
+        #         x, xmf = x_comb
+        #         t = th.ones(x.size(0)).to(device) * t * 1000
+        #         half_x = x[: len(x) // 2]
+        #         x = th.cat([half_x, half_x], dim=0)
+        #         model_output = model(hidden_states=x, timestep=t, **model_kwargs)[0]
+        #         uncond, cond = model_output.chunk(2, dim=0)
+        #         model_output = uncond + cfg_scale * (cond - uncond)
+        #         model_output = th.cat([model_output, model_output], dim=0)
+        #         return model_output
         t = self.t.to(device)
         xcomb = (x, xmf)
         print(self.sampler_type)
