@@ -92,12 +92,12 @@ class Attention(nn.Module):
     """Multi-head attention module."""
 
     def __init__(
-        self,
-        dim: int,
-        n_heads: int,
-        n_kv_heads: Optional[int],
-        qk_norm: bool,
-        y_dim: int,
+            self,
+            dim: int,
+            n_heads: int,
+            n_kv_heads: Optional[int],
+            qk_norm: bool,
+            y_dim: int,
     ):
         """
         Initialize the Attention module.
@@ -201,8 +201,8 @@ class Attention(nn.Module):
 
     @staticmethod
     def apply_rotary_emb(
-        x_in: torch.Tensor,
-        freqs_cis: torch.Tensor,
+            x_in: torch.Tensor,
+            freqs_cis: torch.Tensor,
     ) -> torch.Tensor:
         """
         Apply rotary embeddings to input tensors using the given frequency
@@ -283,12 +283,12 @@ class Attention(nn.Module):
         )
 
     def forward(
-        self,
-        x: torch.Tensor,
-        x_mask: torch.Tensor,
-        freqs_cis: torch.Tensor,
-        y: torch.Tensor,
-        y_mask: torch.Tensor,
+            self,
+            x: torch.Tensor,
+            x_mask: torch.Tensor,
+            freqs_cis: torch.Tensor,
+            y: torch.Tensor,
+            y_mask: torch.Tensor,
     ) -> torch.Tensor:
         """
 
@@ -362,11 +362,11 @@ class Attention(nn.Module):
 
 class FeedForward(nn.Module):
     def __init__(
-        self,
-        dim: int,
-        hidden_dim: int,
-        multiple_of: int,
-        ffn_dim_multiplier: Optional[float],
+            self,
+            dim: int,
+            hidden_dim: int,
+            multiple_of: int,
+            ffn_dim_multiplier: Optional[float],
     ):
         """
         Initialize the FeedForward module.
@@ -423,16 +423,16 @@ class FeedForward(nn.Module):
 
 class TransformerBlock(nn.Module):
     def __init__(
-        self,
-        layer_id: int,
-        dim: int,
-        n_heads: int,
-        n_kv_heads: int,
-        multiple_of: int,
-        ffn_dim_multiplier: float,
-        norm_eps: float,
-        qk_norm: bool,
-        y_dim: int,
+            self,
+            layer_id: int,
+            dim: int,
+            n_heads: int,
+            n_kv_heads: int,
+            multiple_of: int,
+            ffn_dim_multiplier: float,
+            norm_eps: float,
+            qk_norm: bool,
+            y_dim: int,
     ) -> None:
         """
         Initialize a TransformerBlock.
@@ -490,13 +490,13 @@ class TransformerBlock(nn.Module):
         self.attention_y_norm = RMSNorm(y_dim, eps=norm_eps)
 
     def forward(
-        self,
-        x: torch.Tensor,
-        x_mask: torch.Tensor,
-        freqs_cis: torch.Tensor,
-        y: torch.Tensor,
-        y_mask: torch.Tensor,
-        adaln_input: Optional[torch.Tensor] = None,
+            self,
+            x: torch.Tensor,
+            x_mask: torch.Tensor,
+            freqs_cis: torch.Tensor,
+            y: torch.Tensor,
+            y_mask: torch.Tensor,
+            adaln_input: Optional[torch.Tensor] = None,
     ):
         """
         Perform a forward pass through the TransformerBlock.
@@ -588,21 +588,21 @@ class NextDiT(nn.Module):
     """
 
     def __init__(
-        self,
-        patch_size: int = 2,
-        in_channels: int = 4,
-        dim: int = 4096,
-        n_layers: int = 32,
-        n_heads: int = 32,
-        n_kv_heads: Optional[int] = None,
-        multiple_of: int = 256,
-        ffn_dim_multiplier: Optional[float] = None,
-        norm_eps: float = 1e-5,
-        learn_sigma: bool = True,
-        qk_norm: bool = False,
-        cap_feat_dim: int = 5120,
-        scale_factor: float = 1.0,
-        use_flash_attn: bool = True,
+            self,
+            patch_size: int = 2,
+            in_channels: int = 4,
+            dim: int = 4096,
+            n_layers: int = 32,
+            n_heads: int = 32,
+            n_kv_heads: Optional[int] = None,
+            multiple_of: int = 256,
+            ffn_dim_multiplier: Optional[float] = None,
+            norm_eps: float = 1e-5,
+            learn_sigma: bool = True,
+            qk_norm: bool = False,
+            cap_feat_dim: int = 5120,
+            scale_factor: float = 1.0,
+            use_flash_attn: bool = True,
     ) -> None:
         super().__init__()
         self.learn_sigma = learn_sigma
@@ -611,6 +611,11 @@ class NextDiT(nn.Module):
         self.patch_size = patch_size
 
         self.x_embedder = nn.Linear(
+            in_features=patch_size * patch_size * in_channels,
+            out_features=dim,
+            bias=True,
+        )
+        self.xmf_embedder = nn.Linear(
             in_features=patch_size * patch_size * in_channels,
             out_features=dim,
             bias=True,
@@ -647,6 +652,7 @@ class NextDiT(nn.Module):
             ]
         )
         self.final_layer = FinalLayer(dim, patch_size, self.out_channels)
+        self.final_layer_mf = FinalLayer(dim, patch_size, self.out_channels)
 
         for layer in self.layers:
             layer.attention.use_flash_attn = use_flash_attn
@@ -691,20 +697,26 @@ class NextDiT(nn.Module):
         return imgs
 
     def patchify_and_embed(
-        self, x: List[torch.Tensor] | torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, List[Tuple[int, int]], torch.Tensor]:
+            self, x: List[torch.Tensor] | torch.Tensor, xmf) -> Tuple[
+        torch.Tensor, torch.Tensor, torch.Tensor, List[Tuple[int, int]], torch.Tensor]:
         self.freqs_cis = self.freqs_cis.to(x[0].device)
         if isinstance(x, torch.Tensor):
             pH = pW = self.patch_size
             B, C, H, W = x.size()
             x = x.view(B, C, H // pH, pH, W // pW, pW).permute(0, 2, 4, 1, 3, 5).flatten(3)
+            xmf = xmf.view(B, C, H // pH, pH, W // pW, pW).permute(0, 2, 4, 1, 3, 5).flatten(3)
+
             x = self.x_embedder(x)
+            xmf = self.xmf_embedder(xmf)
+
             x = x.flatten(1, 2)
+            xmf = xmf.flatten(1, 2)
 
             mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
 
             return (
                 x,
+                xmf,
                 mask,
                 [(H, W)] * B,
                 self.freqs_cis[: H // pH, : W // pW].flatten(0, 1).unsqueeze(0),
@@ -712,6 +724,7 @@ class NextDiT(nn.Module):
         else:
             pH = pW = self.patch_size
             x_embed = []
+            xmf_embed = []
             freqs_cis = []
             img_size = []
             l_effective_seq_len = []
@@ -727,12 +740,27 @@ class NextDiT(nn.Module):
                 l_effective_seq_len.append(len(img))
                 x_embed.append(img)
 
+            # MF
+            for img in xmf:
+                C, H, W = img.size()
+                item_freqs_cis = self.freqs_cis[: H // pH, : W // pW]
+                freqs_cis.append(item_freqs_cis.flatten(0, 1))
+                img_size.append((H, W))
+                img = img.view(C, H // pH, pH, W // pW, pW).permute(1, 3, 0, 2, 4).flatten(2)
+                img = self.xmf_embedder(img)
+                img = img.flatten(0, 1)
+                l_effective_seq_len.append(len(img))
+                xmf_embed.append(img)
+
             max_seq_len = max(l_effective_seq_len)
             mask = torch.zeros(len(x), max_seq_len, dtype=torch.int32, device=x[0].device)
             padded_x_embed = []
             padded_freqs_cis = []
+
+            padded_xmf_embed = []
+
             for i, (item_embed, item_freqs_cis, item_seq_len) in enumerate(
-                zip(x_embed, freqs_cis, l_effective_seq_len)
+                    zip(x_embed, freqs_cis, l_effective_seq_len)
             ):
                 item_embed = torch.cat(
                     [
@@ -752,18 +780,42 @@ class NextDiT(nn.Module):
                 padded_freqs_cis.append(item_freqs_cis)
                 mask[i][:item_seq_len] = 1
 
-            x_embed = torch.stack(padded_x_embed, dim=0)
-            freqs_cis = torch.stack(padded_freqs_cis, dim=0)
-            return x_embed, mask, img_size, freqs_cis
+            # TODO CHECK IF freqs_cis are needed fo xmf
+            for i, (item_embed, item_freqs_cis, item_seq_len) in enumerate(
+                    zip(xmf_embed, freqs_cis, l_effective_seq_len)
+            ):
+                item_embed = torch.cat(
+                    [
+                        item_embed,
+                        self.pad_token.view(1, -1).expand(max_seq_len - item_seq_len, -1),
+                    ],
+                    dim=0,
+                )
+                item_freqs_cis = torch.cat(
+                    [
+                        item_freqs_cis,
+                        item_freqs_cis[-1:].expand(max_seq_len - item_seq_len, -1),
+                    ],
+                    dim=0,
+                )
+                padded_xmf_embed.append(item_embed)
+                mask[i][:item_seq_len] = 1
 
-    def forward(self, x, t, cap_feats, cap_mask):
+            x_embed = torch.stack(padded_x_embed, dim=0)
+            xmf_embed = torch.stack(padded_xmf_embed, dim=0)
+            freqs_cis = torch.stack(padded_freqs_cis, dim=0)
+            return x_embed, xmf_embed, mask, img_size, freqs_cis
+
+    def forward(self, x, xmf, t, cap_feats, cap_mask):
         """
         Forward pass of NextDiT.
         t: (N,) tensor of diffusion timesteps
         y: (N,) tensor of class labels
         """
         x_is_tensor = isinstance(x, torch.Tensor)
-        x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
+        xmf_is_tensor = isinstance(x, torch.Tensor)
+        # Does both patchifiy andn embeds for x and xmf , Might need to seperate just in case mask and freqs_cis needs to be separate
+        x, xmf, mask, img_size, freqs_cis = self.patchify_and_embed(x, xmf)
         freqs_cis = freqs_cis.to(x.device)
 
         t = self.t_embedder(t)  # (N, D)
@@ -776,27 +828,32 @@ class NextDiT(nn.Module):
         cap_mask = cap_mask.bool()
         for layer in self.layers:
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
+            xmf = layer(xmf, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         x = self.final_layer(x, adaln_input)
+        xmf = self.final_layer_mf(xmf, adaln_input)
         x = self.unpatchify(x, img_size, return_tensor=x_is_tensor)
+        xmf = self.unpatchify(xmf, img_size, return_tensor=xmf_is_tensor)
         if self.learn_sigma:
             if x_is_tensor:
                 x, _ = x.chunk(2, dim=1)
+                xmf, _ = xmf.chunk(2, dim=1)
             else:
                 x = [_.chunk(2, dim=0)[0] for _ in x]
-        return x
+                xmf = [_.chunk(2, dim=0)[0] for _ in xmf]
+        return x, xmf
 
     def forward_with_cfg(
-        self,
-        x,
-        t,
-        cap_feats,
-        cap_mask,
-        cfg_scale,
-        scale_factor=1.0,
-        scale_watershed=1.0,
-        base_seqlen: Optional[int] = None,
-        proportional_attn: bool = False,
+            self,
+            x,
+            t,
+            cap_feats,
+            cap_mask,
+            cfg_scale,
+            scale_factor=1.0,
+            scale_watershed=1.0,
+            base_seqlen: Optional[int] = None,
+            proportional_attn: bool = False,
     ):
         """
         Forward pass of NextDiT, but also batches the unconditional forward pass
@@ -837,12 +894,12 @@ class NextDiT(nn.Module):
 
     @staticmethod
     def precompute_freqs_cis(
-        dim: int,
-        end: int,
-        theta: float = 10000.0,
-        scale_factor: float = 1.0,
-        scale_watershed: float = 1.0,
-        timestep: float = 1.0,
+            dim: int,
+            end: int,
+            theta: float = 10000.0,
+            scale_factor: float = 1.0,
+            scale_watershed: float = 1.0,
+            timestep: float = 1.0,
     ):
         """
         Precompute the frequency tensor for complex exponentials (cis) with
