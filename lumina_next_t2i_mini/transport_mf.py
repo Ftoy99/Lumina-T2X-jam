@@ -90,15 +90,16 @@ class ODE:
                 x, xmf = x_comb
                 t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(
                     device) * t
-                model_output = model(x,xmf, t, **model_kwargs)
-                return model_output
+                model_output = model(x, xmf, t, **model_kwargs)
+                flow, flowmf = model_output
+                return flow
 
         else:
             cfg_scale = model_kwargs["cfg_scale"]
             model_kwargs.pop("cfg_scale")
 
             def _fn(t, x_comb):
-                #TODO SHOULD DO
+                # TODO SHOULD DO
                 print("**************JIMMYS NOT IMPLEMENT MUST DO IF PASS FROM HERE**************")
                 x, xmf = x_comb
                 t = th.ones(x.size(0)).to(device) * t * 1000
