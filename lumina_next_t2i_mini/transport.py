@@ -83,7 +83,6 @@ class ODE:
         self.sampler_type = sampler_type
 
     def sample(self, x, model, **model_kwargs):
-        print(f"debug2 x.shape{x.shape}")
         device = x[0].device if isinstance(x, tuple) else x.device
 
         if not self.use_sd3:
@@ -101,7 +100,6 @@ class ODE:
                 t = th.ones(x.size(0)).to(device) * t * 1000
                 half_x = x[: len(x) // 2]
                 x = th.cat([half_x, half_x], dim=0)
-                print(f"Forward 2")
                 model_output = model(hidden_states=x, timestep=t, **model_kwargs)[0]
                 uncond, cond = model_output.chunk(2, dim=0)
                 model_output = uncond + cfg_scale * (cond - uncond)

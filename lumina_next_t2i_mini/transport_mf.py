@@ -82,36 +82,30 @@ class ODE:
         self.use_sd3 = use_sd3
         self.sampler_type = sampler_type
 
-    def sample(self, x, xmf, model, **model_kwargs):
+    def sample(self, x, model, **model_kwargs):
         device = x[0].device if isinstance(x, tuple) else x.device
 
         if not self.use_sd3:
-            def _fn(t, x_comb):
-                x, xmf = x_comb
-                t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(
-                    device) * t
-                model_output = model(x, xmf, t, **model_kwargs)
-                flow, flowmf = model_output
-                return flow
-        #
-        # else:
-        #     cfg_scale = model_kwargs["cfg_scale"]
-        #     model_kwargs.pop("cfg_scale")
-        #
-        #     def _fn(t, x_comb):
-        #         # TODO SHOULD DO
-        #         print("**************JIMMYS NOT IMPLEMENT MUST DO IF PASS FROM HERE**************")
-        #         x, xmf = x_comb
-        #         t = th.ones(x.size(0)).to(device) * t * 1000
-        #         half_x = x[: len(x) // 2]
-        #         x = th.cat([half_x, half_x], dim=0)
-        #         model_output = model(hidden_states=x, timestep=t, **model_kwargs)[0]
-        #         uncond, cond = model_output.chunk(2, dim=0)
-        #         model_output = uncond + cfg_scale * (cond - uncond)
-        #         model_output = th.cat([model_output, model_output], dim=0)
-        #         return model_output
+
+            def _fn(t, x):
+                t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
+                model_output = model(x, t, **model_kwargs)
+                return model_output
+
+        else:
+            cfg_scale = model_kwargs["cfg_scale"]
+            model_kwargs.pop("cfg_scale")
+
+            def _fn(t, x):
+                t = th.ones(x.size(0)).to(device) * t * 1000
+                half_x = x[: len(x) // 2]
+                x = th.cat([half_x, half_x], dim=0)
+                model_output = model(hidden_states=x, timestep=t, **model_kwargs)[0]
+                uncond, cond = model_output.chunk(2, dim=0)
+                model_output = uncond + cfg_scale * (cond - uncond)
+                model_output = th.cat([model_output, model_output], dim=0)
+                return model_output
+
         t = self.t.to(device)
-        xcomb = (x, xmf)
-        print(self.sampler_type)
-        samples = odeint(_fn, xcomb, t, method=self.sampler_type)
+        samples = odeint(_fn, x, t, method=self.sampler_type)
         return samples
