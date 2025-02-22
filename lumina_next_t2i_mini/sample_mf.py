@@ -16,7 +16,7 @@ from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 
 import models
-from transport import ODE
+from transport_mf import ODE
 
 
 # Adapted from pipelines.StableDiffusionXLPipeline.encode_prompt

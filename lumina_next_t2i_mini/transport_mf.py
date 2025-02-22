@@ -82,21 +82,32 @@ class ODE:
         self.use_sd3 = use_sd3
         self.sampler_type = sampler_type
 
-    def sample(self, x, model, **model_kwargs):
+    def sample(self, x, xmf, model, **model_kwargs):
+        print(f" x = {x}")
+        print(f" xmf = {xmf}")
         device = x[0].device if isinstance(x, tuple) else x.device
 
         if not self.use_sd3:
+            print(f"self.use_sd3 {self.use_sd3}")
 
-            def _fn(t, x):
+            def _fn(t, xcomb):
+                x, xmf = xcomb
+                print(type(x))
+                print(t)
+                print(th.ones(x.size(0)).to(device))
+                t = th.ones(x.size(0)).to(device) * t
                 t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
-                model_output = model(x, t, **model_kwargs)
-                return model_output
+                model_output, xmf_output = model(x, xmf, t, **model_kwargs)
+                return model_output, xmf_output
 
         else:
+            print(f"self.use_sd3 {self.use_sd3}")
             cfg_scale = model_kwargs["cfg_scale"]
             model_kwargs.pop("cfg_scale")
 
-            def _fn(t, x):
+            def _fn(t, xcomb):
+                print("in use_sd3 __fn")
+                x, xmf = xcomb
                 t = th.ones(x.size(0)).to(device) * t * 1000
                 half_x = x[: len(x) // 2]
                 x = th.cat([half_x, half_x], dim=0)
@@ -107,5 +118,8 @@ class ODE:
                 return model_output
 
         t = self.t.to(device)
-        samples = odeint(_fn, x, t, method=self.sampler_type)
+        xcomb = (x, xmf)
+        # samples = odeint(_fn, xcomb, t, method=self.sampler_type)
+        samples = _fn(t, xcomb)
+        print(f"samples {samples}")
         return samples
