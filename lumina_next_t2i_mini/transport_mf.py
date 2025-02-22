@@ -94,12 +94,13 @@ class ODE:
                 # print(t)
                 # print(th.ones(x.size(0)).to(device))
                 print(t)
-                print(x.shape)
-                print(th.ones(x.size(0)).to(device))
-                t = th.ones(x.size(0)).to(device) * t
-                t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
-                model_output, xmf_output = model(x, xmf, t, **model_kwargs)
-                return model_output, xmf_output
+                for step in t:
+                    print(x.shape)
+                    print(th.ones(x.size(0)).to(device))
+                    step = th.ones(x.size(0)).to(device) * step
+                    step = th.ones(x[0].size(0)).to(device) * step if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
+                    x, xmf = model(x, xmf, step, **model_kwargs)
+                return x, xmf
 
         else:
             print(f"self.use_sd3 {self.use_sd3}")
