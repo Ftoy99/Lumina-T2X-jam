@@ -95,8 +95,7 @@ class ODE:
                 # print(th.ones(x.size(0)).to(device))
                 print(t)
                 for step in t:
-                    print(x.shape)
-                    print(th.ones(x.size(0)).to(device))
+                    print(step)
                     step = th.ones(x.size(0)).to(device) * step
                     step = th.ones(x[0].size(0)).to(device) * step if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
                     x, xmf = model(x, xmf, step, **model_kwargs)
