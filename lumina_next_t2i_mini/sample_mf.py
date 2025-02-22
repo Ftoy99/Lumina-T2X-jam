@@ -105,6 +105,7 @@ def main(args, rank, master_port):
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
     # latent_size = train_args.image_size // 8
+    train_args.model = train_args.model+"_mf"
     print(f"Model is train_args {train_args.model}")
     model = models.__dict__[train_args.model](
         qk_norm=train_args.qk_norm,
