@@ -807,6 +807,7 @@ class NextDiT(nn.Module):
             return x_embed, xmf_embed, mask, img_size, freqs_cis
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
+        print("In forward")
         """
         Forward pass of NextDiT.
         t: (N,) tensor of diffusion timesteps
@@ -846,6 +847,7 @@ class NextDiT(nn.Module):
     def forward_with_cfg(
             self,
             x,
+            xmf,
             t,
             cap_feats,
             cap_mask,
@@ -855,6 +857,7 @@ class NextDiT(nn.Module):
             base_seqlen: Optional[int] = None,
             proportional_attn: bool = False,
     ):
+        print("In forward with cfg")
         """
         Forward pass of NextDiT, but also batches the unconditional forward pass
         for classifier-free guidance.
