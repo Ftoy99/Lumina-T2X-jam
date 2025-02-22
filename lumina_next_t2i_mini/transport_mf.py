@@ -98,5 +98,5 @@ class ODE:
         # sol = odeint(f, x0, t, method='euler', args=(omega,))
         # sol = odeint(lambda y, t: f(y, t, omega), x0, t, method='euler')
         # Samples
-        samples_x, samples_xmf = odeint(lambda y, t: _fn(y, t, xmf), x, t, method=self.sampler_type)  # holy shit
-        return samples_x, samples_xmf
+        samples_x = odeint(lambda y, t: _fn(y, t, xmf), x, t, method=self.sampler_type)  # holy shit
+        return samples_x
