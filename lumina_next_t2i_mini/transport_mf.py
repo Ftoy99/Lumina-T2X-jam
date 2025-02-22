@@ -121,4 +121,4 @@ class ODE:
             samples_x = samples_x + k2_x * dt
             samples_xmf = samples_xmf + k2_xmf * dt
         print(f"samples_x shape {samples_x.shape}")
-        return samples_x
+        return samples_x, samples_xmf

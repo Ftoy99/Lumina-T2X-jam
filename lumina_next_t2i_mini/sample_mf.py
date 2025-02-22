@@ -105,7 +105,7 @@ def main(args, rank, master_port):
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
     # latent_size = train_args.image_size // 8
-    train_args.model = train_args.model+"_mf"
+    train_args.model = train_args.model + "_mf"
     print(f"Model is train_args {train_args.model}")
     model = models.__dict__[train_args.model](
         qk_norm=train_args.qk_norm,
@@ -213,15 +213,20 @@ def main(args, rank, master_port):
                     model_kwargs["scale_watershed"] = 1.0
 
                 # Forward
-                samples = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
+                samples, samples_xmf = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
                     z, zmf, model.forward_with_cfg, **model_kwargs
                 )
                 samples = samples[:1]
+                samples_xmf = samples_xmf[:1]
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
                 samples = vae.decode(samples / factor).sample
                 samples = (samples + 1.0) / 2.0
                 samples.clamp_(0.0, 1.0)
+
+                samples_xmf = vae.decode(samples_xmf / factor).samples_xmf
+                samples_xmf = (samples_xmf + 1.0) / 2.0
+                samples_xmf.clamp_(0.0, 1.0)
 
                 # Save samples to disk as individual .png files
                 for i, (sample, cap) in enumerate(zip(samples, caps_list)):
@@ -232,6 +237,21 @@ def main(args, rank, master_port):
                         {
                             "caption": cap,
                             "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
+                            "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
+                            "solver": args.solver,
+                            "num_sampling_steps": args.num_sampling_steps,
+                        }
+                    )
+
+                # Save samples_xmf to disk as individual .png files
+                for i, (sample_xmf, cap) in enumerate(zip(samples_xmf, caps_list)):
+                    img_xmf = to_pil_image(sample_xmf.float())
+                    save_path_xmf = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_samples_xmf.png"
+                    img_xmf.save(save_path_xmf)
+                    info.append(
+                        {
+                            "caption": cap,
+                            "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_samples_xmf.png",
                             "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
                             "solver": args.solver,
                             "num_sampling_steps": args.num_sampling_steps,
