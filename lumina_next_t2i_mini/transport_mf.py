@@ -98,6 +98,8 @@ class ODE:
             model_kwargs.pop("cfg_scale")
 
             def _fn(t, x_comb):
+                #TODO SHOULD DO
+                print("**************JIMMYS NOT IMPLEMENT MUST DO IF PASS FROM HERE**************")
                 x, xmf = x_comb
                 t = th.ones(x.size(0)).to(device) * t * 1000
                 half_x = x[: len(x) // 2]
