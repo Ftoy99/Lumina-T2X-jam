@@ -87,8 +87,10 @@ class ODE:
 
         if not self.use_sd3:
             print(f"self.use_sd3 {self.use_sd3}")
+
             def _fn(t, xcomb):
                 x, xmf = xcomb
+                print(x)
                 print(t)
                 t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
                 model_output, xmf_output = model(x, xmf, t, **model_kwargs)
