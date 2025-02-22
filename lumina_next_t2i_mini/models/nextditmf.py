@@ -858,7 +858,7 @@ class NextDiT(nn.Module):
         eps = torch.cat([half_eps, half_eps], dim=0)
         output = torch.cat([eps, rest], dim=1)
         print(f"Returning from forward_with_cfg with output = {output.shape}")
-        return
+        return output
 
     @staticmethod
     def precompute_freqs_cis(
