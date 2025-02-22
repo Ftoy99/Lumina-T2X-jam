@@ -84,15 +84,15 @@ class ODE:
 
     def sample(self, x, xmf, model, **model_kwargs):
         device = x[0].device if isinstance(x, tuple) else x.device
-
         if not self.use_sd3:
-
+            print("not  self.use_sd3")
             def _fn(t, x):
                 t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
                 model_output = model(x, t, **model_kwargs)
                 return model_output
 
         else:
+            print("self.use_sd3")
             cfg_scale = model_kwargs["cfg_scale"]
             model_kwargs.pop("cfg_scale")
 
