@@ -790,20 +790,20 @@ class NextDiT(nn.Module):
         for layer in self.layers:
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
-        x = self.final_layer(x, adaln_input)
-        x = self.unpatchify(x, img_size, return_tensor=x_is_tensor)
+        x_out = self.final_layer(x, adaln_input)
+        x_out = self.unpatchify(x_out, img_size, return_tensor=x_is_tensor)
 
-        xmf = self.final_layer_xmf(x, adaln_input)
-        xmf = self.unpatchify(xmf, img_size, return_tensor=x_is_tensor)
+        xmf_out = self.final_layer_xmf(x, adaln_input)
+        xmf_out = self.unpatchify(xmf_out, img_size, return_tensor=x_is_tensor)
 
         if self.learn_sigma:
             if x_is_tensor:
-                x, _ = x.chunk(2, dim=1)
-                xmf, _ = xmf.chunk(2, dim=1)
+                x_out, _ = x_out.chunk(2, dim=1)
+                xmf_out, _ = xmf_out.chunk(2, dim=1)
             else:
-                x = [_.chunk(2, dim=0)[0] for _ in x]
-                xmf = [_.chunk(2, dim=0)[0] for _ in xmf]
-        return x, xmf
+                x_out = [_.chunk(2, dim=0)[0] for _ in x_out]
+                xmf_out = [_.chunk(2, dim=0)[0] for _ in xmf_out]
+        return x_out, xmf_out
 
     def forward_with_cfg(
             self,
