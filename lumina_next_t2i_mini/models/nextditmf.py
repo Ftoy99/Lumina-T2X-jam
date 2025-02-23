@@ -610,13 +610,13 @@ class NextDiT(nn.Module):
         self.out_channels = in_channels * 2 if learn_sigma else in_channels
         self.patch_size = patch_size
 
-        self.x_embedder = nn.Linear(
+        self.x_embedder_shared = nn.Linear(
             in_features=patch_size * patch_size * in_channels * 2,
             out_features=dim,
             bias=True,
         )
-        nn.init.xavier_uniform_(self.x_embedder.weight)
-        nn.init.constant_(self.x_embedder.bias, 0.0)
+        nn.init.xavier_uniform_(self.x_embedder_shared.weight)
+        nn.init.constant_(self.x_embedder_shared.bias, 0.0)
 
         self.t_embedder = TimestepEmbedder(min(dim, 1024))
         self.cap_embedder = nn.Sequential(
@@ -699,7 +699,7 @@ class NextDiT(nn.Module):
             pH = pW = self.patch_size
             B, C, H, W = x.size()
             x = x.view(B, C, H // pH, pH, W // pW, pW).permute(0, 2, 4, 1, 3, 5).flatten(3)
-            x = self.x_embedder(x)
+            x = self.x_embedder_shared(x)
             x = x.flatten(1, 2)
 
             mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
