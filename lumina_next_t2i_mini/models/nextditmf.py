@@ -611,8 +611,8 @@ class NextDiT(nn.Module):
         self.patch_size = patch_size
 
         self.x_cat_emb = nn.Linear(
-            in_features=patch_size * patch_size * in_channels,
-            out_features=patch_size * patch_size * in_channels,
+            in_features=patch_size * patch_size * in_channels*2,
+            out_features=dim,
             bias=True,
         )
         nn.init.xavier_uniform_(self.x_cat_emb.weight)
@@ -774,10 +774,10 @@ class NextDiT(nn.Module):
         y: (N,) tensor of class labels
         """
         x_is_tensor = isinstance(x, torch.Tensor)
-        # print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
-        # x = torch.concat((x, xmf), 1)
-        # print(f"x.shape concated {x.shape}")
-        # x = self.x_cat_emb(x)
+        print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
+        x = torch.concat((x, xmf), 1)
+        print(f"x.shape concated {x.shape}")
+        x = self.x_cat_emb(x)
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
         freqs_cis = freqs_cis.to(x.device)
 
