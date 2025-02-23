@@ -842,8 +842,12 @@ class NextDiT(nn.Module):
                 layer.attention.proportional_attn = proportional_attn
 
         half = x[: len(x) // 2]
-        combined = torch.cat([half, half], dim=0)
-        out_x, out_xmf = self(combined, xmf, t, cap_feats, cap_mask)
+        x = torch.cat([half, half], dim=0)
+
+        half = xmf[: len(xmf) // 2]
+        xmf = torch.cat([half, half], dim=0)
+
+        out_x, out_xmf = self(x, xmf, t, cap_feats, cap_mask)
         output_x = self.cfg_calc(cfg_scale, out_x)
         output_xmf = self.cfg_calc(cfg_scale, out_xmf)
         return output_x, output_xmf
