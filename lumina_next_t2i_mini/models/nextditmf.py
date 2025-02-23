@@ -774,9 +774,9 @@ class NextDiT(nn.Module):
         y: (N,) tensor of class labels
         """
         x_is_tensor = isinstance(x, torch.Tensor)
-        print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
-        x = torch.concat((x, xmf), 1)
-        print(f"x.shape concated {x.shape}")
+        # print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
+        # x = torch.concat((x, xmf), 1)
+        # print(f"x.shape concated {x.shape}")
         # x = self.x_cat_emb(x)
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
         freqs_cis = freqs_cis.to(x.device)
