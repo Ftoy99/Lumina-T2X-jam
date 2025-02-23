@@ -790,12 +790,11 @@ class NextDiT(nn.Module):
         cap_mask = cap_mask.bool()
         for layer in self.layers:
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
-            xmf = layer(xmf, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         x = self.final_layer(x, adaln_input)
         x = self.unpatchify(x, img_size, return_tensor=x_is_tensor)
 
-        xmf = self.final_layer(xmf, adaln_input)
+        xmf = self.final_layer_xmf(x, adaln_input)
         xmf = self.unpatchify(xmf, img_size, return_tensor=x_is_tensor)
 
         if self.learn_sigma:
