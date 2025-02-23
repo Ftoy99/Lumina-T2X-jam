@@ -610,13 +610,21 @@ class NextDiT(nn.Module):
         self.out_channels = in_channels * 2 if learn_sigma else in_channels
         self.patch_size = patch_size
 
-        self.x_embedder_shared = nn.Linear(
-            in_features=patch_size * patch_size * in_channels * 2,
+        self.x_embedder = nn.Linear(
+            in_features=patch_size * patch_size * in_channels,
             out_features=dim,
             bias=True,
         )
-        nn.init.xavier_uniform_(self.x_embedder_shared.weight)
-        nn.init.constant_(self.x_embedder_shared.bias, 0.0)
+        nn.init.xavier_uniform_(self.x_embedder.weight)
+        nn.init.constant_(self.x_embedder.bias, 0.0)
+
+        self.xmf_embedder = nn.Linear(
+            in_features=patch_size * patch_size * in_channels,
+            out_features=dim,
+            bias=True,
+        )
+        nn.init.xavier_uniform_(self.xmf_embedder.weight)
+        nn.init.constant_(self.xmf_embedder.bias, 0.0)
 
         self.t_embedder = TimestepEmbedder(min(dim, 1024))
         self.cap_embedder = nn.Sequential(
@@ -692,14 +700,18 @@ class NextDiT(nn.Module):
         return imgs
 
     def patchify_and_embed(
-            self, x: List[torch.Tensor] | torch.Tensor
+            self, x: List[torch.Tensor] | torch.Tensor, isFlow
     ) -> Tuple[torch.Tensor, torch.Tensor, List[Tuple[int, int]], torch.Tensor]:
         self.freqs_cis = self.freqs_cis.to(x[0].device)
         if isinstance(x, torch.Tensor):
             pH = pW = self.patch_size
             B, C, H, W = x.size()
             x = x.view(B, C, H // pH, pH, W // pW, pW).permute(0, 2, 4, 1, 3, 5).flatten(3)
-            x = self.x_embedder_shared(x)
+            if isFlow:
+                x = self.xmf_embedder(x)
+            else:
+                x = self.x_embedder(x)
+
             x = x.flatten(1, 2)
 
             mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
@@ -764,10 +776,8 @@ class NextDiT(nn.Module):
         y: (N,) tensor of class labels
         """
         x_is_tensor = isinstance(x, torch.Tensor)
-
-        x_concat = torch.cat([x, xmf], dim=1)
-        print(f"Patchify x{x.shape} xmf {xmf.shape} x_concat {x_concat.shape}")
-        x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
+        x, mask, img_size, freqs_cis = self.patchify_and_embed(x, False)
+        xmf, _, _, _ = self.patchify_and_embed(xmf, True)
         freqs_cis = freqs_cis.to(x.device)
 
         t = self.t_embedder(t)  # (N, D)
@@ -780,11 +790,12 @@ class NextDiT(nn.Module):
         cap_mask = cap_mask.bool()
         for layer in self.layers:
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
+            xmf = layer(xmf, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         x = self.final_layer(x, adaln_input)
-        x = self.final_layer_mf(x, adaln_input)
-
         x = self.unpatchify(x, img_size, return_tensor=x_is_tensor)
+
+        xmf = self.final_layer(xmf, adaln_input)
         xmf = self.unpatchify(xmf, img_size, return_tensor=x_is_tensor)
 
         if self.learn_sigma:
