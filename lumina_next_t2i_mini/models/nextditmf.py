@@ -611,7 +611,7 @@ class NextDiT(nn.Module):
         self.patch_size = patch_size
 
         self.x_embedder = nn.Linear(
-            in_features=patch_size * patch_size * in_channels,
+            in_features=patch_size * patch_size * in_channels * 2,
             out_features=dim,
             bias=True,
         )
@@ -780,12 +780,11 @@ class NextDiT(nn.Module):
         cap_mask = cap_mask.bool()
         for layer in self.layers:
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
-            xmf = layer(xmf, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         x = self.final_layer(x, adaln_input)
-        x = self.unpatchify(x, img_size, return_tensor=x_is_tensor)
+        x = self.final_layer_mf(x, adaln_input)
 
-        xmf = self.final_layer(xmf, adaln_input)
+        x = self.unpatchify(x, img_size, return_tensor=x_is_tensor)
         xmf = self.unpatchify(xmf, img_size, return_tensor=x_is_tensor)
 
         if self.learn_sigma:
