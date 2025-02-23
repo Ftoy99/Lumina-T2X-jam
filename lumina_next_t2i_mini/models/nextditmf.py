@@ -611,7 +611,7 @@ class NextDiT(nn.Module):
         self.patch_size = patch_size
 
         self.x_cat_emb = nn.Linear(
-            in_features=patch_size * patch_size * in_channels * 2,
+            in_features=patch_size * patch_size * in_channels,
             out_features=patch_size * patch_size * in_channels,
             bias=True,
         )
