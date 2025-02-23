@@ -777,7 +777,6 @@ class NextDiT(nn.Module):
         """
         x_is_tensor = isinstance(x, torch.Tensor)
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x, False)
-        xmf, _, _, _ = self.patchify_and_embed(xmf, True)
         freqs_cis = freqs_cis.to(x.device)
 
         t = self.t_embedder(t)  # (N, D)
