@@ -708,7 +708,7 @@ class NextDiT(nn.Module):
             B, C, H, W = x.size()
             x = x.view(B, C, H // pH, pH, W // pW, pW).permute(0, 2, 4, 1, 3, 5).flatten(3)
 
-            x = self.x_embedder(x)
+            x = self.x_cat_emb(x)
 
             x = x.flatten(1, 2)
 
@@ -777,7 +777,7 @@ class NextDiT(nn.Module):
         print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
         x = torch.concat((x, xmf), 1)
         print(f"x.shape concated {x.shape}")
-        x = self.x_cat_emb(x)
+        # x = self.x_cat_emb(x)
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
         freqs_cis = freqs_cis.to(x.device)
 
