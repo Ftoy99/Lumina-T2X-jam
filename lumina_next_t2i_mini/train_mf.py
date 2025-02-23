@@ -44,7 +44,7 @@ from grad_norm import calculate_l2_grad_norm, scale_grad
 from imgproc import generate_crop_size_list, var_center_crop
 import models
 from parallel import distributed_init, get_intra_node_process_group
-from transport import training_losses
+from transport_mf import training_losses
 
 #############################################################################
 #                            Data item Processor                            #
