@@ -134,7 +134,7 @@ def main(args, rank, master_port):
                 f"x_cat_emb.shape {model.x_cat_emb.weight[:, :model.x_embedder.in_features].shape} xemb.shape {model.x_embedder.weight.shape}")
             model.x_cat_emb.bias.copy_(model.x_embedder.bias)  # Copy bias
             print(
-                f"xcat.bias.shape {model.x_cat_emb.bias.shape} model.x_embedder.bias.shape {model.model.x_embedder.bias.shape}")
+                f"xcat.bias.shape {model.x_cat_emb.bias.shape} model.x_embedder.bias.shape {model.x_embedder.bias.shape}")
             # Zero out the motion-related part (newly added rows)
             motion_dim_start = model.x_embedder.in_features
             model.x_cat_emb.weight[:, motion_dim_start:].zero_()
