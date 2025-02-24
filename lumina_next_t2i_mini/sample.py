@@ -124,6 +124,14 @@ def main(args, rank, master_port):
         )
         model.load_state_dict(ckpt, strict=True)
 
+    with torch.no_grad():
+        model.x_cat_emb.weight[:, :model.x_embedder.in_features] = model.x_embedder.weight  # Copy pre-trained weights
+        model.x_cat_emb.bias.copy_(model.x_embedder.bias)  # Copy bias
+
+        # Zero out the motion-related part (newly added rows)
+        motion_dim_start = model.x_embedder.in_features
+        model.x_cat_emb.weight[:, motion_dim_start:].zero_()
+
     sample_folder_dir = args.image_save_path
 
     if rank == 0:

@@ -732,7 +732,7 @@ class NextDiT(nn.Module):
                 freqs_cis.append(item_freqs_cis.flatten(0, 1))
                 img_size.append((H, W))
                 img = img.view(C, H // pH, pH, W // pW, pW).permute(1, 3, 0, 2, 4).flatten(2)
-                img = self.x_embedder(img)
+                img = self.x_cat_emb(img)
                 img = img.flatten(0, 1)
                 l_effective_seq_len.append(len(img))
                 x_embed.append(img)
