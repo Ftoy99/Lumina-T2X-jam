@@ -613,8 +613,8 @@ class NextDiT(nn.Module):
 
         self.vae_in = nn.Sequential(
             nn.Linear(
-                in_features=patch_size * patch_size * in_channels * 2 * 4,
-                out_features=patch_size * patch_size * in_channels * 2,
+                in_features=patch_size * patch_size * in_channels * 4,
+                out_features=patch_size * patch_size * in_channels,
                 bias=True,
             ),
             nn.ReLU()
