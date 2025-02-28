@@ -77,7 +77,7 @@ video_path = "videos/yoga.mp4"
 frames = load_video(video_path)
 print(f"Loaded {len(frames)} frames.")
 
-print(f"Frames shape {frames.shape}")
+print(f"Frames shape {frames}")
 
 # Encode frames
 latents = encode_frames(frames)
