@@ -1,7 +1,6 @@
 import torch
 import cv2
 import numpy as np
-from diffusers import CogVideoXPipeline
 
 
 from diffusers import AutoencoderKLCogVideoX
@@ -37,10 +36,10 @@ def encode_frames(frames):
         frames_resized = np.array([cv2.resize(frame, (512, 512)) for frame in frames])  # Resize all frames
         print(f"np array frames shape {frames_resized.shape}") # np array frames shape (708, 512, 512, 3)
         #  batch_size, num_channels, num_frames, height, width = x.shape
-        frames_tensor = torch.tensor(frames_resized).permute(0, 3, 1, 2).unsqueeze(0)  # Convert to (Frames, Channels, H, W)
+        frames_tensor = torch.tensor(frames_resized).permute(3,0, 1, 2)  # Convert to (Frames, Channels, H, W)
         frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
         print(f"frames_tensor shape {frames_tensor.shape}")
-        latent = vae.tiled_encode(frames_tensor).latent_dist.sample()
+        latent = vae.encode(frames_tensor).latent_dist.sample()
         latents.append(latent)
 
     return latents
