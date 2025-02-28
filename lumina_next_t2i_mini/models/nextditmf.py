@@ -662,7 +662,8 @@ class NextDiT(nn.Module):
 
         assert (dim // n_heads) % 4 == 0, "2d rope needs head dim to be divisible by 4"
         self.freqs_cis = NextDiT.precompute_freqs_cis(
-            dim // n_heads,
+            #dim // n_heads,
+            51200,
             384,
             scale_factor=scale_factor,
         )
