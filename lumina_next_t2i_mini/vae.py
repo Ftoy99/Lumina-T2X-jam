@@ -84,9 +84,9 @@ latents = encode_frames(frames)
 print("Encoding complete.")
 
 # Decode frames
-decoded_frames = decode_frames(latents)
-print("Decoding complete.")
-
-# Save output video
-save_video(decoded_frames, "output/output.mp4")
-print("Saved output video as output.mp4.")
+# decoded_frames = decode_frames(latents)
+# print("Decoding complete.")
+#
+# # Save output video
+# save_video(decoded_frames, "output/output.mp4")
+# print("Saved output video as output.mp4.")
