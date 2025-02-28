@@ -69,13 +69,18 @@ def patchify_and_embed(
     if isinstance(x, torch.Tensor):
         pH = pW = 8
         B, C, H, W = x.size()
-        x = x.view(B, C, H // pH, pH, W // pW, pW)
-        x = x.permute(0, 2, 4, 1, 3, 5)
-        x = x.flatten(3)
+        F = 5
+        x = x.view(B, C, F, H // pH, pH, W // pW, pW)  # B C Hn H Wn W # new B C F Hn H Wn W
+        x = x.permute(0, 3, 5, 2, 1, 4, 6)  # B Hn Wn C H W # B Hn Wn C F H W
+        print(f"shape before flat {x.shape}")
+        x = x.flatten(4)
+        print(f"shape after flat {x.shape}")
 
-        # x = self.x_cat_emb(x)
+        x = self.x_cat_emb(x)
+        print(f"shape after embedding{x.shape}")
 
-        x = x.flatten(1, 2)
+        x = x.flatten(1, 3)
+        print(f"shape after flat 2{x.shape}")
         mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
 
         return (
