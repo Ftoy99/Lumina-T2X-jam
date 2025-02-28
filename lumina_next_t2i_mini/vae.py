@@ -8,8 +8,9 @@ pipe = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="v
     "cuda")
 
 # Enable optimizations
-pipe.vae.enable_slicing()
-pipe.vae.enable_tiling()
+
+pipe.enable_slicing()
+pipe.enable_tiling()
 
 
 # ---- Video Processing Functions ----
