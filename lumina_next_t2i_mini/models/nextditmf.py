@@ -685,20 +685,29 @@ class NextDiT(nn.Module):
         if return_tensor:
             H, W = img_size[0]
             B = x.size(0)
+            F = frames
             # Compute number of patches per frame
             Hn, Wn = H // pH, W // pW
             L = Hn * Wn * frames  # Total patches per sample
 
-            assert x.shape[1] == L, f"Expected {L} patches, got {x.shape[1]}"
-            # unpatched with frames
+            #Original
+            #     H, W = img_size[0]
+            #     B = x.size(0)
+            #     L = (H // pH) * (W // pW)
+            #     x = x[:, :L].view(B, H // pH, W // pW, pH, pW, self.out_channels)
+            #     x = x.permute(0, 5, 1, 3, 2, 4).flatten(4, 5).flatten(2, 3)
+            #     return x
+
             print(f"Unpatchify x shape {x.shape}")
             x = x[:, :L]
             print(f"Unpatchify x shape after :L {x.shape}")
-            x = x.view(B, Hn, Wn, frames, pH, pW, self.out_channels)
-            print(f"Unpatchify x shape after view {x.shape}")
-            x = x.permute(0, 6, 3, 1, 4, 2, 5).flatten(4, 5).flatten(2, 3)
-            print(f"Unpatchify x shape after permute {x.shape}")
+
+            # x = x.view(B, Hn, Wn, frames, pH, pW, self.out_channels)
+            # print(f"Unpatchify x shape after view {x.shape}")
+            # x = x.permute(0, 6, 3, 1, 4, 2, 5).flatten(4, 5).flatten(2, 3)
+            # print(f"Unpatchify x shape after permute {x.shape}")
             return x
+
         else:
             imgs = []
             for i in range(x.size(0)):
