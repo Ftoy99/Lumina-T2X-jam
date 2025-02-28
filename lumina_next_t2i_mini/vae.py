@@ -43,7 +43,7 @@ def encode_frames(frames):
         frames_tensor = torch.tensor(frames_resized).permute(0, 3, 1, 2).unsqueeze(0)  # Convert to (Frames, Channels, H, W)
         frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
         print(f"frames_tensor shape {frames_tensor.shape}")
-        latent = pipe.encode(frames_tensor).latent_dist.sample()
+        latent = pipe.vae.encode(frames_tensor).latent_dist.sample()
         latents.append(latent)
 
     return latents
@@ -54,7 +54,7 @@ def decode_frames(latents):
     frames = []
     with torch.no_grad():
         for latent in latents:
-            decoded = pipe.decode(latent).sample
+            decoded = pipe.vae.decode(latent).sample
             decoded_image = ((decoded.squeeze(0).permute(1, 2, 0).cpu().float() + 1) * 127.5).clamp(0,
                                                                                                     255).byte().numpy()
             decoded_image = cv2.cvtColor(decoded_image, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
