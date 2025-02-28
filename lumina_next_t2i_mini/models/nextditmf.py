@@ -679,6 +679,8 @@ class NextDiT(nn.Module):
         x: (N, T, patch_size**2 * C)
         imgs: (N, H, W, C)
         """
+        print(f"Input of unpatchify x is {x.shape}")
+
         pH = pW = self.patch_size
         if return_tensor:
             H, W = img_size[0]
