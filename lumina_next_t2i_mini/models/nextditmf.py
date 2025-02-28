@@ -612,10 +612,12 @@ class NextDiT(nn.Module):
         self.patch_size = patch_size
 
         self.vae_in = nn.Sequential(
-            nn.Linear(
-                in_features=patch_size * patch_size * in_channels * 4,
-                out_features=patch_size * patch_size * in_channels,
-                bias=True,
+            nn.Conv3d(
+                in_channels=in_channels*4,  # Channels in the input tensor
+                out_channels=in_channels,  # Number of channels you want in the output
+                kernel_size=3,  # You can adjust the kernel size
+                stride=1,  # Adjust the stride if needed
+                padding=1  # Padding to keep spatial dimensions
             ),
             nn.ReLU()
         )
