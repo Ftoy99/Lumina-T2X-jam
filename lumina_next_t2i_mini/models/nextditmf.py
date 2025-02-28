@@ -729,7 +729,7 @@ class NextDiT(nn.Module):
             x = x[:, :L]  # Remains the same meaning this is ok we have as many patches as we should have.
             print(f"Unpatchify x shape after :L {x.shape}")
 
-            x = x.view(B, Hn, Wn, frames, pH, pW, self.out_channels)
+            x = x.view(B, Hn, Wn, F, pH, pW, self.out_channels)
             # print(f"Unpatchify x shape after view {x.shape}")
 
             x = x.permute(0, 6, 3, 1, 4, 2, 5)
@@ -867,16 +867,20 @@ class NextDiT(nn.Module):
         # TODO PASS FRAMES TO MODEL
         frames_size = 5
         x_out = self.final_layer(x, adaln_input)
-        x_out = self.unpatchify(x_out, img_size, frames_size, return_tensor=x_is_tensor)
-
         xmf_out = self.final_layer_xmf(x, adaln_input)
+
+        print(f"x_out shape before unpatchify {x_out.shape}")
+        x_out = self.unpatchify(x_out, img_size, frames_size, return_tensor=x_is_tensor)
         xmf_out = self.unpatchify(xmf_out, img_size, frames_size, return_tensor=x_is_tensor)
+        print(f"x_out shape after unpatchify {x_out.shape}")
+
 
         print(f"x_out shape before vae_out {x_out.shape}")
         x_out = self.vae_out(x_out)
+        xmf_out = self.vae_out(xmf_out)
         print(f"x_out shape after vae_out {x_out.shape}")
 
-        xmf_out = self.vae_out(xmf_out)
+
 
         if self.learn_sigma:
             if x_is_tensor:
