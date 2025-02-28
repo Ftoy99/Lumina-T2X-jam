@@ -710,7 +710,9 @@ class NextDiT(nn.Module):
             # Create the patches
             x = x.view(B, C, F, H // pH, pH, W // pW, pW)  # B C Hn H Wn W # new B C F Hn H Wn W
             x = x.permute(0, 3, 5, 2, 1, 4, 6)  # B Hn Wn C H W # B Hn Wn C F H W
+            print(f"shape before flat {x.shape}")
             x = x.flatten(4)
+            print(f"shape before flat {x.shape}")
 
             x = self.x_cat_emb(x)
 
