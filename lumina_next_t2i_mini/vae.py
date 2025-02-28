@@ -47,7 +47,8 @@ def decode_frames(latents):
     frames = []
     with torch.no_grad():
             decoded = vae.decode(latents).sample
-            decoded_image = ((decoded.squeeze(0).permute(1, 2, 0).cpu().float() + 1) * 127.5).clamp(0,255).byte().numpy()
+            print(f"Decoded shapes {decoded.shape}")
+            #decoded_image = ((decoded.squeeze(0).permute(1, 2, 0).cpu().float() + 1) * 127.5).clamp(0,255).byte().numpy()
             frames.append(decoded_image)
     return frames
 
