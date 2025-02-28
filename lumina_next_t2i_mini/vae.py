@@ -8,8 +8,6 @@ pipe = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="v
     "cuda")
 
 # Enable optimizations
-pipe.enable_model_cpu_offload()
-pipe.enable_sequential_cpu_offload()
 pipe.vae.enable_slicing()
 pipe.vae.enable_tiling()
 
