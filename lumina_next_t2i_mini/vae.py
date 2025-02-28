@@ -34,11 +34,12 @@ def encode_frames(frames):
     """Encode frames to latent space."""
     latents = []
     with torch.no_grad():
-        for frame in frames:
-            frame = cv2.resize(frame, (512, 512))  # Resize to match model input
-            frame_tensor = torch.tensor(frame).permute(2, 0, 1).unsqueeze(0).to(torch.float16).to("cuda") / 127.5 - 1
-            latent = pipe.encode(frame_tensor).latent_dist.sample()
-            latents.append(latent)
+        frames_resized = [cv2.resize(frame, (512, 512)) for frame in frames]  # Resize all frames
+        frames_tensor = torch.tensor(np.array(frames_resized)).permute(0, 3, 1, 2)  # Convert to (B, C, H, W)
+        frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
+        print(f"frames_tensor shape {frames_tensor.shape}")
+        latent = pipe.encode(frames_tensor).latent_dist.sample()
+        latents.append(latent)
 
     return latents
 
