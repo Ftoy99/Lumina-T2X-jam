@@ -838,7 +838,7 @@ class NextDiT(nn.Module):
         y: (N,) tensor of class labels
         """
         # 16 Channels from vae to 4
-        print(f"x shape after vae_in {x.shape}")
+        print(f"x shape before vae_in {x.shape}")
 
         x = self.vae_in(x)
         xmf = self.vae_in(xmf)
