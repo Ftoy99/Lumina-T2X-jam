@@ -672,13 +672,16 @@ class NextDiT(nn.Module):
         self.final_layer = FinalLayer(dim, patch_size, self.out_channels)
         self.final_layer_xmf = FinalLayer(dim, patch_size, self.out_channels)
 
-        self.vae_out = nn.Sequential(nn.Linear(
-            in_features=patch_size * patch_size * in_channels,
-            out_features=patch_size * patch_size * in_channels * 4,
-            bias=True,
-        ),
-            nn.ReLU())
-
+        self.vae_out = nn.Sequential(
+            nn.Conv3d(
+                in_channels=in_channels,  # Channels in the output tensor from decoder
+                out_channels=in_channels * 4,  # Number of channels you want in the output
+                kernel_size=3,  # You can adjust the kernel size
+                stride=1,  # Adjust the stride if needed
+                padding=1  # Padding to keep spatial dimensions
+            ),
+            nn.ReLU()
+        )
         nn.init.xavier_uniform_(self.vae_out[0].weight)
         nn.init.constant_(self.vae_out[0].bias, 0.0)
 
