@@ -46,13 +46,9 @@ def decode_frames(latents):
     """Decode latents back to video frames."""
     frames = []
     with torch.no_grad():
-        for latent in latents:
-            decoded = vae.decode(latent).sample
-            decoded_image = ((decoded.squeeze(0).permute(1, 2, 0).cpu().float() + 1) * 127.5).clamp(0,
-                                                                                                    255).byte().numpy()
-            decoded_image = cv2.cvtColor(decoded_image, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
+            decoded = vae.decode(latents).sample
+            decoded_image = ((decoded.squeeze(0).permute(1, 2, 0).cpu().float() + 1) * 127.5).clamp(0,255).byte().numpy()
             frames.append(decoded_image)
-
     return frames
 
 
@@ -82,10 +78,10 @@ print("Encoding complete.")
 
 print(f"Latents shape {latents.shape}")
 
-# Decode frames
-# decoded_frames = decode_frames(latents)
-# print("Decoding complete.")
+#Decode frames
+decoded_frames = decode_frames(latents)
+print("Decoding complete.")
 #
-# # Save output video
-# save_video(decoded_frames, "output/output.mp4")
-# print("Saved output video as output.mp4.")
+# Save output video
+save_video(decoded_frames, "output/output.mp4")
+print("Saved output video as output.mp4.")
