@@ -716,7 +716,7 @@ class NextDiT(nn.Module):
 
             x = self.x_cat_emb(x)
 
-            x = x.flatten(1, 2)
+            x = x.flatten(1, 2,3)
             mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
 
             return (
