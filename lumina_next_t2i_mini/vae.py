@@ -78,6 +78,7 @@ def save_video(frames, output_path, fps=30):
 video_path = "videos/yoga.mp4"
 frames = load_video(video_path)
 print(f"Loaded {len(frames)} frames.")
+frames = frames[:48]
 
 # Encode frames
 latents = encode_frames(frames)
