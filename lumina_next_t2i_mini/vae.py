@@ -1,16 +1,19 @@
 import torch
 import cv2
 import numpy as np
-from diffusers import AutoencoderKLCogVideoX
+from diffusers import CogVideoXPipeline
 
 # Load the model
-pipe = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
-    "cuda")
+pipe = CogVideoXPipeline.from_pretrained(
+    "THUDM/CogVideoX-2b",
+    torch_dtype=torch.float16
+)
 
 # Enable optimizations
-
-pipe.enable_slicing()
-pipe.enable_tiling()
+pipe.enable_model_cpu_offload()
+pipe.enable_sequential_cpu_offload()
+pipe.vae.enable_slicing()
+pipe.vae.enable_tiling()
 
 
 # ---- Video Processing Functions ----
