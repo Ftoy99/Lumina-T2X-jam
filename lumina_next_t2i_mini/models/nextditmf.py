@@ -690,7 +690,7 @@ class NextDiT(nn.Module):
             Hn, Wn = H // pH, W // pW
             L = Hn * Wn * frames  # Total patches per sample
 
-            #Original
+            # Original
             #     H, W = img_size[0]
             #     B = x.size(0)
             #     L = (H // pH) * (W // pW)
@@ -699,13 +699,20 @@ class NextDiT(nn.Module):
             #     return x
 
             print(f"Unpatchify x shape {x.shape}")
-            x = x[:, :L]
+            x = x[:, :L]  # Remains the same meaning this is ok we have as many patches as we should have.
             print(f"Unpatchify x shape after :L {x.shape}")
 
-            # x = x.view(B, Hn, Wn, frames, pH, pW, self.out_channels)
+            x = x.view(B, Hn, Wn, frames, pH, pW, self.out_channels)
             # print(f"Unpatchify x shape after view {x.shape}")
-            # x = x.permute(0, 6, 3, 1, 4, 2, 5).flatten(4, 5).flatten(2, 3)
-            # print(f"Unpatchify x shape after permute {x.shape}")
+
+            x = x.permute(0, 6, 3, 1, 4, 2, 5)
+            # B C F Hn pH Wn pW
+            # 0 1 2 3  4  5  6
+
+            x = x.flatten(3, 4)
+            x = x.flatten(4, 5)
+
+            print(f"Unpatchify x shape after flatten {x.shape}")
             return x
 
         else:
