@@ -835,17 +835,12 @@ class NextDiT(nn.Module):
         y: (N,) tensor of class labels
         """
         # 16 Channels from vae to 4
-        print(f"x shape before vae in {x.shape}")
-        B, C, F, H, W = x.shape
-
-        x = x.view(B, -1)
-        xmf = xmf.view(B, -1)
+        print(f"x shape after vae_in {x.shape}")
 
         x = self.vae_in(x)
         xmf = self.vae_in(xmf)
 
-        x = x.view(B, C//4, F, H, W)
-        xmf = xmf.view(B, C//4, F, H, W)
+        print(f"x shape after vae_in {x.shape}")
 
         x_is_tensor = isinstance(x, torch.Tensor)
         print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
