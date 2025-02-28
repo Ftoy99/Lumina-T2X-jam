@@ -715,8 +715,9 @@ class NextDiT(nn.Module):
             print(f"shape after flat {x.shape}")
 
             x = self.x_cat_emb(x)
+            print(f"shape after embedding{x.shape}")
 
-            x = x.flatten(1, 2,3)
+            x = x.flatten(1, 2, 3)
             print(f"shape after flat 2{x.shape}")
             mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
 
