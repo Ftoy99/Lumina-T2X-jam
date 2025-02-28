@@ -24,7 +24,6 @@ def load_video(video_path):
         ret, frame = cap.read()
         if not ret:
             break
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
         frames.append(frame)
 
     cap.release()
@@ -76,8 +75,6 @@ def save_video(frames, output_path, fps=30):
 video_path = "videos/yoga.mp4"
 frames = load_video(video_path)
 print(f"Loaded {len(frames)} frames.")
-
-print(f"Frames shape {frames}")
 
 # Encode frames
 latents = encode_frames(frames)
