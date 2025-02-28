@@ -187,7 +187,7 @@ def main(args, rank, master_port):
                 latent_w, latent_h = w // 8, h // 8
 
                 # Latent picture noise
-                z = torch.randn([1, 4, 50, latent_w, latent_h], device="cuda").to(dtype)
+                z = torch.randn([1, 4, 10, latent_w, latent_h], device="cuda").to(dtype)
                 z = z.repeat(n * 2, 1, 1, 1, 1)
 
                 print(f"z.shape {z.shape}")
