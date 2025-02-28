@@ -12,8 +12,8 @@ pipe = CogVideoXPipeline.from_pretrained(
 # Enable optimizations
 pipe.enable_model_cpu_offload()
 pipe.enable_sequential_cpu_offload()
-# pipe.vae.enable_slicing()
-# pipe.vae.enable_tiling()
+pipe.vae.enable_slicing()
+pipe.vae.enable_tiling()
 
 
 # ---- Video Processing Functions ----
@@ -43,7 +43,7 @@ def encode_frames(frames):
         frames_tensor = torch.tensor(frames_resized).permute(0, 3, 1, 2).unsqueeze(0)  # Convert to (Frames, Channels, H, W)
         frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
         print(f"frames_tensor shape {frames_tensor.shape}")
-        latent = pipe.vae.encode(frames_tensor).latent_dist.sample()
+        latent = pipe.vae.tiled_encode(frames_tensor).latent_dist.sample()
         latents.append(latent)
 
     return latents
