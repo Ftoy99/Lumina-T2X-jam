@@ -872,7 +872,10 @@ class NextDiT(nn.Module):
         xmf_out = self.final_layer_xmf(x, adaln_input)
         xmf_out = self.unpatchify(xmf_out, img_size, frames_size, return_tensor=x_is_tensor)
 
+        print(f"x_out shape before vae_out {x_out.shape}")
         x_out = self.vae_out(x_out)
+        print(f"x_out shape after vae_out {x_out.shape}")
+
         xmf_out = self.vae_out(xmf_out)
 
         if self.learn_sigma:
