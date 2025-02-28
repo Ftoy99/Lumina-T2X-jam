@@ -35,8 +35,9 @@ def encode_frames(frames):
     latents = []
     with torch.no_grad():
         frames_resized = np.array([cv2.resize(frame, (512, 512)) for frame in frames])  # Resize all frames
-        print(f"np array frames shape {frames_resized.shape}")
-        frames_tensor = torch.tensor(frames_resized).permute(0, 3, 1, 2)  # Convert to (B, C, H, W)
+        print(f"np array frames shape {frames_resized.shape}") # np array frames shape (708, 512, 512, 3)
+        #  batch_size, num_channels, num_frames, height, width = x.shape
+        frames_tensor = torch.tensor(frames_resized).permute(0, 3, 1, 2).unsqueeze(0)  # Convert to (Frames, Channels, H, W)
         frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
         print(f"frames_tensor shape {frames_tensor.shape}")
         latent = pipe.encode(frames_tensor).latent_dist.sample()
