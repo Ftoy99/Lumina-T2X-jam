@@ -83,6 +83,8 @@ frames = frames[:48]
 latents = encode_frames(frames)
 print("Encoding complete.")
 
+print(f"Latents shape {latents.shape}")
+
 # Decode frames
 # decoded_frames = decode_frames(latents)
 # print("Decoding complete.")
