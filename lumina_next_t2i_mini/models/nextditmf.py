@@ -313,8 +313,9 @@ class Attention(nn.Module):
         xk = xk.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
         xv = xv.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
 
-        xq = Attention.apply_rotary_emb(xq, freqs_cis=freqs_cis)
-        xk = Attention.apply_rotary_emb(xk, freqs_cis=freqs_cis)
+        # TODO ENABLE
+        # xq = Attention.apply_rotary_emb(xq, freqs_cis=freqs_cis)
+        # xk = Attention.apply_rotary_emb(xk, freqs_cis=freqs_cis)
 
         xq, xk = xq.to(dtype), xk.to(dtype)
 
@@ -662,8 +663,7 @@ class NextDiT(nn.Module):
 
         assert (dim // n_heads) % 4 == 0, "2d rope needs head dim to be divisible by 4"
         self.freqs_cis = NextDiT.precompute_freqs_cis(
-            #dim // n_heads,
-            51200// n_heads,
+            dim // n_heads,
             384,
             scale_factor=scale_factor,
         )
