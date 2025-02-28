@@ -611,6 +611,18 @@ class NextDiT(nn.Module):
         self.out_channels = in_channels * 2 if learn_sigma else in_channels
         self.patch_size = patch_size
 
+        self.vae_in = nn.Sequential(
+            nn.Linear(
+                in_features=patch_size * patch_size * in_channels * 2 * 4,
+                out_features=patch_size * patch_size * in_channels * 2,
+                bias=True,
+            ),
+            nn.ReLU()
+        )
+
+        nn.init.xavier_uniform_(self.vae_in[0].weight)
+        nn.init.constant_(self.vae_in[0].bias, 0.0)
+
         self.x_cat_emb = nn.Linear(
             in_features=patch_size * patch_size * in_channels * 2,
             out_features=dim,
@@ -657,6 +669,16 @@ class NextDiT(nn.Module):
         )
         self.final_layer = FinalLayer(dim, patch_size, self.out_channels)
         self.final_layer_xmf = FinalLayer(dim, patch_size, self.out_channels)
+
+        self.vae_out = nn.Sequential(nn.Linear(
+            in_features=patch_size * patch_size * in_channels,
+            out_features=patch_size * patch_size * in_channels * 4,
+            bias=True,
+        ),
+            nn.ReLU())
+
+        nn.init.xavier_uniform_(self.vae_out[0].weight)
+        nn.init.constant_(self.vae_out[0].bias, 0.0)
 
         for layer in self.layers:
             layer.attention.use_flash_attn = use_flash_attn
@@ -810,6 +832,10 @@ class NextDiT(nn.Module):
         t: (N,) tensor of diffusion timesteps
         y: (N,) tensor of class labels
         """
+        # 16 Channels from vae to 4
+        x = self.vae_in(x)
+        xmf = self.vae_in(xmf)
+
         x_is_tensor = isinstance(x, torch.Tensor)
         print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
         x = torch.concat((x, xmf), 1)
@@ -836,6 +862,9 @@ class NextDiT(nn.Module):
 
         xmf_out = self.final_layer_xmf(x, adaln_input)
         xmf_out = self.unpatchify(xmf_out, img_size, frames_size, return_tensor=x_is_tensor)
+
+        x_out = self.vae_out(x_out)
+        xmf_out = self.vae_out(xmf_out)
 
         if self.learn_sigma:
             if x_is_tensor:
