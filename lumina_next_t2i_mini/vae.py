@@ -12,8 +12,8 @@ pipe = CogVideoXPipeline.from_pretrained(
 # Enable optimizations
 pipe.enable_model_cpu_offload()
 pipe.enable_sequential_cpu_offload()
-pipe.vae.enable_slicing()
-pipe.vae.enable_tiling()
+# pipe.vae.enable_slicing()
+# pipe.vae.enable_tiling()
 
 
 # ---- Video Processing Functions ----
