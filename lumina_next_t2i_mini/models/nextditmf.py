@@ -705,8 +705,12 @@ class NextDiT(nn.Module):
         self.freqs_cis = self.freqs_cis.to(x[0].device)
         if isinstance(x, torch.Tensor):
             pH = pW = self.patch_size
-            B, C, H, W = x.size()
-            x = x.view(B, C, H // pH, pH, W // pW, pW).permute(0, 2, 4, 1, 3, 5).flatten(3)
+            B, C, F, H, W = x.size()
+
+            # Create the patches
+            x = x.view(B, C, F, H // pH, pH, W // pW, pW)  # B C Hn H Wn W # new B C F Hn H Wn W
+            x = x.permute(0, 3, 5, 1, 2, 4, 6)  # B Hn Wn C H W # B Hn Wn C F H W
+            x = x.flatten(3)
 
             x = self.x_cat_emb(x)
 
