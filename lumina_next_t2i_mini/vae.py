@@ -3,17 +3,14 @@ import cv2
 import numpy as np
 from diffusers import CogVideoXPipeline
 
-# Load the model
-pipe = CogVideoXPipeline.from_pretrained(
-    "THUDM/CogVideoX-2b",
-    torch_dtype=torch.float16
-)
+
+from diffusers import AutoencoderKLCogVideoX
+
+vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to("cuda")
 
 # Enable optimizations
-pipe.enable_model_cpu_offload()
-pipe.enable_sequential_cpu_offload()
-pipe.vae.enable_slicing()
-pipe.vae.enable_tiling()
+vae.enable_slicing()
+vae.enable_tiling()
 
 
 # ---- Video Processing Functions ----
@@ -43,7 +40,7 @@ def encode_frames(frames):
         frames_tensor = torch.tensor(frames_resized).permute(0, 3, 1, 2).unsqueeze(0)  # Convert to (Frames, Channels, H, W)
         frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
         print(f"frames_tensor shape {frames_tensor.shape}")
-        latent = pipe.vae.tiled_encode(frames_tensor).latent_dist.sample()
+        latent = vae.tiled_encode(frames_tensor).latent_dist.sample()
         latents.append(latent)
 
     return latents
@@ -54,7 +51,7 @@ def decode_frames(latents):
     frames = []
     with torch.no_grad():
         for latent in latents:
-            decoded = pipe.vae.decode(latent).sample
+            decoded = vae.decode(latent).sample
             decoded_image = ((decoded.squeeze(0).permute(1, 2, 0).cpu().float() + 1) * 127.5).clamp(0,
                                                                                                     255).byte().numpy()
             decoded_image = cv2.cvtColor(decoded_image, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR
