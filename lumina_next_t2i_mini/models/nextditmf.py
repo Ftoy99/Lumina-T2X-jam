@@ -875,8 +875,8 @@ class NextDiT(nn.Module):
         print(f"x_out shape after unpatchify {x_out.shape}")
 
         # print(f"x_out shape before vae_out {x_out.shape}")
-        # x_out = self.vae_out(x_out)
-        # xmf_out = self.vae_out(xmf_out)
+        x_out = self.vae_out(x_out)
+        xmf_out = self.vae_out(xmf_out)
         # print(f"x_out shape after vae_out {x_out.shape}")
 
         if self.learn_sigma:
