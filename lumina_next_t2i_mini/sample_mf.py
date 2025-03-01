@@ -232,8 +232,8 @@ def main(args, rank, master_port):
                 samples_xmf = samples_xmf[:1]
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
-                # decoded = vae.decode(samples / factor).sample
-                decoded = vae.decode(samples).sample
+                decoded = vae.decode(samples / factor).sample
+                # decoded = vae.decode(samples).sample
                 decoded = ((decoded.squeeze(0).permute(1, 2, 3, 0).cpu().float() + 1) * 127.5).clamp(0,
                                                                                                      255).byte().numpy()
                 print(f"Decoded shape {decoded.shape}")
