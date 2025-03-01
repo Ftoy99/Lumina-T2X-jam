@@ -314,7 +314,6 @@ class Attention(nn.Module):
         xk = xk.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
         xv = xv.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
 
-        # TODO ENABLE
         xq = Attention.apply_rotary_emb(xq, freqs_cis=freqs_cis)
         xk = Attention.apply_rotary_emb(xk, freqs_cis=freqs_cis)
 
