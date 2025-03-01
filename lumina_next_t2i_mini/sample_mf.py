@@ -245,7 +245,7 @@ def main(args, rank, master_port):
                 samples_xmf.clamp_(0.0, 1.0)
 
                 # Save samples to disk as individual .png files
-                for i, (decoded, cap) in enumerate(zip(samples, caps_list)):
+                for i, (decoded, cap) in enumerate(zip(decoded, caps_list)):
                     # img = to_pil_image(sample.float())
                     save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}.mp4"
                     # img.save(save_path)
