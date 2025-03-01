@@ -240,28 +240,27 @@ def main(args, rank, master_port):
                 # samples.clamp_(0.0, 1.0)
 
                 decoded_mf = vae.decode(samples_xmf).sample
-                decoded_mf = decoded.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
-                decoded_mf = ((decoded + 1) * 127.5).clamp(0, 255).byte().numpy()
+                decoded_mf = decoded_mf.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
+                decoded_mf = ((decoded_mf + 1) * 127.5).clamp(0, 255).byte().numpy()
 
                 # Save samples to disk as individual .png files
-                for i, (decoded, cap) in enumerate(zip(decoded, caps_list)):
+                for i, (decoded_vid, cap) in enumerate(zip(decoded, caps_list)):
                     save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}.mp4"
-                    F, H, W, _ = decoded.shape
+                    F, H, W, _ = decoded_vid.shape
                     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
                     out = cv2.VideoWriter(save_path, fourcc, 2, (W, H))
-                    for frame in decoded:
+                    for frame in decoded_vid:
                         out.write(frame)
 
                     out.release()
 
                 # Save samples_xmf to disk as individual .png files
-                for i, (decoded, cap) in enumerate(zip(decoded_mf, caps_list)):
-                    print(f"i {i} decoded shape {decoded.shape}")
+                for i, (decoded_mf_vid, cap) in enumerate(zip(decoded_mf, caps_list)):
                     save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}_mf.mp4"
-                    F, H, W, _ = decoded.shape
+                    F, H, W, _ = decoded_mf_vid.shape
                     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
                     out = cv2.VideoWriter(save_path, fourcc, 2, (W, H))
-                    for frame in decoded:
+                    for frame in decoded_mf_vid:
                         out.write(frame)
                     out.release()
 
