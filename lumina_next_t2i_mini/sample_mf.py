@@ -259,7 +259,7 @@ def main(args, rank, master_port):
                     #     }
                     # )
                     """Save frames as a video."""
-                    height, width, _ = decoded[0].shape
+                    height, width, _ = decoded.shape
                     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
                     out = cv2.VideoWriter(save_path, fourcc, 1, (width, height))
                     print(f"decoded shape {decoded.shape}")
