@@ -989,6 +989,7 @@ class NextDiT(nn.Module):
 
         theta = theta * ntk_factor
         end = end * 5
+        print(f"new end {end}")
         freqs = 1.0 / (theta ** (torch.arange(0, dim, 4)[: (dim // 4)].float().cuda() / dim)) / linear_factor
 
         timestep = torch.arange(end, device=freqs.device, dtype=torch.float)  # type: ignore
