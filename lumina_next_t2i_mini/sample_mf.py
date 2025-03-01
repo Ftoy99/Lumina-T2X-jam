@@ -6,6 +6,7 @@ import random
 import socket
 import time
 
+from diffusers import AutoencoderKLCogVideoX
 from diffusers.models import AutoencoderKL
 import numpy as np
 from safetensors.torch import load_file
@@ -97,10 +98,8 @@ def main(args, rank, master_port):
 
     if dist.get_rank() == 0:
         print(f"Creating vae: {train_args.vae}")
-    vae = AutoencoderKL.from_pretrained(
-        (f"stabilityai/sd-vae-ft-{train_args.vae}" if train_args.vae != "sdxl" else "stabilityai/sdxl-vae"),
-        torch_dtype=torch.float32,
-    ).cuda()
+    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
+        "cuda")
 
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
