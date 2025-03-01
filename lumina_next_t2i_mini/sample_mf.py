@@ -264,6 +264,8 @@ def main(args, rank, master_port):
                     out = cv2.VideoWriter(save_path, fourcc, 1, (width, height))
 
                     for frame in decoded:
+                        print(f"frame {frame}")
+                        print(f"frame shape {frame.shape}")
                         out.write(frame)
 
                     out.release()
