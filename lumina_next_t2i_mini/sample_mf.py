@@ -228,8 +228,6 @@ def main(args, rank, master_port):
                 samples, samples_xmf = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
                     z, zmf, model.forward_with_cfg, **model_kwargs
                 )
-                samples = samples[:1]
-                samples_xmf = samples_xmf[:1]
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
                 # decoded = vae.decode(samples / factor).sample
