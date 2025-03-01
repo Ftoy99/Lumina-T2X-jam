@@ -225,6 +225,7 @@ class Attention(nn.Module):
         """
         with torch.cuda.amp.autocast(enabled=False):
             x = torch.view_as_complex(x_in.float().reshape(*x_in.shape[:-1], -1, 2))
+            print(f"Applying rotary emb freqs_cis {freqs_cis.shape}")
             freqs_cis = freqs_cis.unsqueeze(2)
             print(f"Applying rotary emb x {x.shape}")
             print(f"Applying rotary emb freqs_cis {freqs_cis.shape}")
@@ -998,7 +999,6 @@ class NextDiT(nn.Module):
         freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)
         freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)
         freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w], dim=-1).flatten(2)
-        print(f"freq dimensions {freqs_cis.shape}")
         return freqs_cis
 
     def parameter_count(self) -> int:
