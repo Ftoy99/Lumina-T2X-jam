@@ -613,7 +613,7 @@ class NextDiT(nn.Module):
 
         self.vae_in = nn.Sequential(
             nn.Conv3d(
-                in_channels=in_channels*4,  # Channels in the input tensor
+                in_channels=in_channels * 4,  # Channels in the input tensor
                 out_channels=in_channels,  # Number of channels you want in the output
                 kernel_size=3,  # You can adjust the kernel size
                 stride=1,  # Adjust the stride if needed
@@ -674,7 +674,7 @@ class NextDiT(nn.Module):
 
         self.vae_out = nn.Sequential(
             nn.Conv3d(
-                in_channels=in_channels*2,  # Channels in the output tensor from decoder
+                in_channels=in_channels * 2,  # Channels in the output tensor from decoder
                 out_channels=in_channels * 4 * 2,  # Number of channels you want in the output
                 kernel_size=3,  # You can adjust the kernel size
                 stride=1,  # Adjust the stride if needed
@@ -993,9 +993,11 @@ class NextDiT(nn.Module):
         freqs = torch.outer(timestep, freqs).float()  # type: ignore
         freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
 
-        freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)
-        freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)
-        freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w], dim=-1).flatten(2)
+        freqs_cis_h = freqs_cis.view(end, 1, 1, dim // 4, 1).repeat(1, end, end, 1, 1)
+        freqs_cis_w = freqs_cis.view(1, end, 1, dim // 4, 1).repeat(end, 1, end, 1, 1)
+        freqs_cis_t = freqs_cis.view(1, 1, end, dim // 4, 1).repeat(end, end, 1, 1, 1)
+
+        freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w, freqs_cis_t], dim=-1).flatten(3)
 
         return freqs_cis
 
