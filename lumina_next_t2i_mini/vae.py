@@ -54,11 +54,11 @@ def decode_frames(latents):
 
 def save_video(decoded_video, output_path, fps=30):
     """Save frames as a video."""
-    height, width, _ = frames[0].shape
+    height, width, _ = decoded_video[0].shape
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
-    for frame in frames:
+    for frame in decoded_video:
         out.write(frame)
 
     out.release()

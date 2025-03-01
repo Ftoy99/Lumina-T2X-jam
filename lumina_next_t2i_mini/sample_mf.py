@@ -6,6 +6,7 @@ import random
 import socket
 import time
 
+import cv2
 from diffusers import AutoencoderKLCogVideoX
 from diffusers.models import AutoencoderKL
 import numpy as np
@@ -100,6 +101,7 @@ def main(args, rank, master_port):
         print(f"Creating vae: {train_args.vae}")
     vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
         "cuda")
+
     vae.enable_slicing()
     vae.enable_tiling()
 
@@ -240,18 +242,27 @@ def main(args, rank, master_port):
 
                 # Save samples to disk as individual .png files
                 for i, (sample, cap) in enumerate(zip(samples, caps_list)):
-                    img = to_pil_image(sample.float())
-                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png"
-                    img.save(save_path)
-                    info.append(
-                        {
-                            "caption": cap,
-                            "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
-                            "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
-                            "solver": args.solver,
-                            "num_sampling_steps": args.num_sampling_steps,
-                        }
-                    )
+                    # img = to_pil_image(sample.float())
+                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.mp4"
+                    # img.save(save_path)
+                    # info.append(
+                    #     {
+                    #         "caption": cap,
+                    #         "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
+                    #         "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
+                    #         "solver": args.solver,
+                    #         "num_sampling_steps": args.num_sampling_steps,
+                    #     }
+                    # )
+                    """Save frames as a video."""
+                    height, width, _ = sample[0].shape
+                    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
+                    out = cv2.VideoWriter(save_path, fourcc, 1, (width, height))
+
+                    for frame in sample:
+                        out.write(frame)
+
+                    out.release()
 
                 # Save samples_xmf to disk as individual .png files
                 for i, (sample_xmf, cap) in enumerate(zip(samples_xmf, caps_list)):
