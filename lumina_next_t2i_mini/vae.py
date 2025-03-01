@@ -45,6 +45,7 @@ def encode_frames(frames):
 
 def decode_frames(latents):
     with torch.no_grad():
+        print(f"Before decode latent shape {latents.shape}")
         decoded = vae.decode(latents).sample
         print(f"Decoded shapes {decoded.shape}")
         decoded_video = ((decoded.squeeze(0).permute(1, 2, 3, 0).cpu().float() + 1) * 127.5).clamp(0, 255).byte().numpy()
