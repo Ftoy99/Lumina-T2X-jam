@@ -176,8 +176,6 @@ def main(args, rank, master_port):
                 z = torch.randn([1, 4, latent_w, latent_h], device="cuda").to(dtype)
                 z = z.repeat(n * 2, 1, 1, 1)
 
-                print(f"debug1 z.shape{z.shape}")
-
                 with torch.no_grad():
                     cap_feats, cap_mask = encode_prompt([caps_list] + [""], text_encoder, tokenizer, 0.0)
 
