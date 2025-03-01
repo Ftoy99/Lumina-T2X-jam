@@ -988,8 +988,6 @@ class NextDiT(nn.Module):
             ntk_factor = scale_factor
 
         theta = theta * ntk_factor
-        print(f"dim {dim}")
-        print(f"dim *5 {dim*5}")
         freqs = 1.0 / (theta ** (torch.arange(0, dim, 4)[: (dim // 4)].float().cuda() / dim)) / linear_factor
 
         timestep = torch.arange(end, device=freqs.device, dtype=torch.float)  # type: ignore
@@ -1000,7 +998,7 @@ class NextDiT(nn.Module):
         freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)
         freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)
         freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w], dim=-1).flatten(2)
-
+        print(f"freq dimensions {freqs_cis.shape}")
         return freqs_cis
 
     def parameter_count(self) -> int:
