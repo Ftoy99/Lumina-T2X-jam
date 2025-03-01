@@ -1,7 +1,10 @@
 from datasets import load_dataset
 
 # Load the Flickr30k dataset
-dataset = load_dataset("flickr30k")
+dataset = load_dataset("nlphuji/flickr30k")
+
+# Access the test split
+test_data = dataset["test"]
 
 # Iterate over a few samples
 for idx, sample in enumerate(test_data):
