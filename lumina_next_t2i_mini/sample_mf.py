@@ -239,50 +239,31 @@ def main(args, rank, master_port):
                 # samples = (samples + 1.0) / 2.0
                 # samples.clamp_(0.0, 1.0)
 
-                samples_xmf = vae.decode(samples_xmf / factor).sample
-                samples_xmf = (samples_xmf + 1.0) / 2.0
-                samples_xmf.clamp_(0.0, 1.0)
+                decoded_mf = vae.decode(samples_xmf).sample
+                decoded_mf = decoded.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
+                decoded_mf = ((decoded + 1) * 127.5).clamp(0, 255).byte().numpy()
 
                 # Save samples to disk as individual .png files
                 for i, (decoded, cap) in enumerate(zip(decoded, caps_list)):
-                    # img = to_pil_image(sample.float())
-                    print(f"i {i} decoded shape {decoded.shape}")
                     save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}.mp4"
-                    # img.save(save_path)
-                    # info.append(
-                    #     {
-                    #         "caption": cap,
-                    #         "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
-                    #         "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
-                    #         "solver": args.solver,
-                    #         "num_sampling_steps": args.num_sampling_steps,
-                    #     }
-                    # )
-                    """Save frames as a video."""
                     F, H, W, _ = decoded.shape
                     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
                     out = cv2.VideoWriter(save_path, fourcc, 2, (W, H))
-                    print(f"decoded shape {decoded.shape}")
                     for frame in decoded:
-                        print(f"frame shape {frame.shape}")
                         out.write(frame)
 
                     out.release()
 
                 # Save samples_xmf to disk as individual .png files
-                for i, (sample_xmf, cap) in enumerate(zip(samples_xmf, caps_list)):
-                    img_xmf = to_pil_image(sample_xmf.float())
-                    save_path_xmf = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_samples_xmf.png"
-                    img_xmf.save(save_path_xmf)
-                    info.append(
-                        {
-                            "caption": cap,
-                            "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_samples_xmf.png",
-                            "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
-                            "solver": args.solver,
-                            "num_sampling_steps": args.num_sampling_steps,
-                        }
-                    )
+                for i, (decoded, cap) in enumerate(zip(decoded_mf, caps_list)):
+                    print(f"i {i} decoded shape {decoded.shape}")
+                    save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}_mf.mp4"
+                    F, H, W, _ = decoded.shape
+                    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
+                    out = cv2.VideoWriter(save_path, fourcc, 2, (W, H))
+                    for frame in decoded:
+                        out.write(frame)
+                    out.release()
 
                 with open(info_path, "w") as f:
                     f.write(json.dumps(info))
