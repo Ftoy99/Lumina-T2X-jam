@@ -232,10 +232,11 @@ def main(args, rank, master_port):
                 samples_xmf = samples_xmf[:1]
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
-                decoded = vae.decode(samples / factor).sample
-                # decoded = vae.decode(samples).sample
-                decoded = ((decoded.squeeze(0).permute(1, 2, 3, 0).cpu().float() + 1) * 127.5).clamp(0,
-                                                                                                     255).byte().numpy()
+                # decoded = vae.decode(samples / factor).sample
+
+                decoded = vae.decode(samples).sample
+                decoded = decoded.squeeze(0).permute(1, 2, 3, 0).cpu().float()
+                decoded = ((decoded + 1) * 127.5).clamp(0, 255).byte().numpy()
                 print(f"Decoded shape {decoded.shape}")
                 # samples = (samples + 1.0) / 2.0
                 # samples.clamp_(0.0, 1.0)
@@ -259,9 +260,9 @@ def main(args, rank, master_port):
                     #     }
                     # )
                     """Save frames as a video."""
-                    height, width, _ = decoded.shape
+                    height, width, _ = decoded[0].shape
                     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
-                    out = cv2.VideoWriter(save_path, fourcc, 1, (width, height))
+                    out = cv2.VideoWriter(save_path, fourcc, 2, (width, height))
                     print(f"decoded shape {decoded.shape}")
                     for frame in decoded:
                         print(f"frame shape {frame.shape}")
