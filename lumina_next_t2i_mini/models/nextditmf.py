@@ -931,7 +931,9 @@ class NextDiT(nn.Module):
         xmf = torch.cat([half, half], dim=0)
 
         out_x, out_xmf = self(x, xmf, t, cap_feats, cap_mask)
+        print(f"out_x shape in samplle is {out_x.shape}")
         output_x = self.cfg_calc(cfg_scale, out_x)
+        print(f"out_x shape after cfg in sample is {output_x.shape}")
         output_xmf = self.cfg_calc(cfg_scale, out_xmf)
         return output_x, output_xmf
 
