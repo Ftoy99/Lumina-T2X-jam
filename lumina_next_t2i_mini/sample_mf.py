@@ -262,9 +262,8 @@ def main(args, rank, master_port):
                     height, width, _ = decoded[0].shape
                     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
                     out = cv2.VideoWriter(save_path, fourcc, 1, (width, height))
-
+                    print(f"decoded shape {decoded.shape}")
                     for frame in decoded:
-                        print(f"frame {frame}")
                         print(f"frame shape {frame.shape}")
                         out.write(frame)
 
