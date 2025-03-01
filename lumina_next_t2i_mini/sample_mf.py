@@ -232,18 +232,20 @@ def main(args, rank, master_port):
                 samples_xmf = samples_xmf[:1]
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
-                samples = vae.decode(samples / factor).sample
-                samples = (samples + 1.0) / 2.0
-                samples.clamp_(0.0, 1.0)
+                decoded = vae.decode(samples / factor).sample
+                decoded = ((decoded.squeeze(0).permute(1, 2, 3, 0).cpu().float() + 1) * 127.5).clamp(0,255).byte().numpy()
+                print(f"Decoded shape {decoded.shape}")
+                # samples = (samples + 1.0) / 2.0
+                # samples.clamp_(0.0, 1.0)
 
                 samples_xmf = vae.decode(samples_xmf / factor).sample
                 samples_xmf = (samples_xmf + 1.0) / 2.0
                 samples_xmf.clamp_(0.0, 1.0)
 
                 # Save samples to disk as individual .png files
-                for i, (sample, cap) in enumerate(zip(samples, caps_list)):
+                for i, (decoded, cap) in enumerate(zip(samples, caps_list)):
                     # img = to_pil_image(sample.float())
-                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.mp4"
+                    save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}.mp4"
                     # img.save(save_path)
                     # info.append(
                     #     {
@@ -255,11 +257,11 @@ def main(args, rank, master_port):
                     #     }
                     # )
                     """Save frames as a video."""
-                    height, width, _ = sample[0].shape
+                    height, width, _ = decoded[0].shape
                     fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for MP4
                     out = cv2.VideoWriter(save_path, fourcc, 1, (width, height))
 
-                    for frame in sample:
+                    for frame in decoded:
                         out.write(frame)
 
                     out.release()
