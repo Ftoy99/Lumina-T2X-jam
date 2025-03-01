@@ -674,7 +674,7 @@ class NextDiT(nn.Module):
 
         self.vae_out = nn.Sequential(
             nn.Conv3d(
-                in_channels=in_channels,  # Channels in the output tensor from decoder
+                in_channels=in_channels*2,  # Channels in the output tensor from decoder
                 out_channels=in_channels * 4,  # Number of channels you want in the output
                 kernel_size=3,  # You can adjust the kernel size
                 stride=1,  # Adjust the stride if needed
