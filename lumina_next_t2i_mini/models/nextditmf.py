@@ -227,6 +227,7 @@ class Attention(nn.Module):
             x = torch.view_as_complex(x_in.float().reshape(*x_in.shape[:-1], -1, 2))
             print(f"Applying rotary emb freqs_cis {freqs_cis.shape}")
             freqs_cis = freqs_cis.unsqueeze(2)
+            freqs_cis = freqs_cis.repeat(1, x.shape[1] // freqs_cis.shape[1], 1, 1)
             print(f"Applying rotary emb x {x.shape}")
             print(f"Applying rotary emb freqs_cis {freqs_cis.shape}")
             x_out = torch.view_as_real(x * freqs_cis).flatten(3)
