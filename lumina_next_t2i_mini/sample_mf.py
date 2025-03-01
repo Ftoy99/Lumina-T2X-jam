@@ -100,6 +100,8 @@ def main(args, rank, master_port):
         print(f"Creating vae: {train_args.vae}")
     vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
         "cuda")
+    vae.enable_slicing()
+    vae.enable_tiling()
 
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
