@@ -246,6 +246,7 @@ def main(args, rank, master_port):
                 # Save samples to disk as individual .png files
                 for i, (decoded, cap) in enumerate(zip(decoded, caps_list)):
                     # img = to_pil_image(sample.float())
+                    print(f"i {i} decoded shape {decoded.shape}")
                     save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}.mp4"
                     # img.save(save_path)
                     # info.append(
