@@ -233,7 +233,7 @@ def main(args, rank, master_port):
                 # decoded = vae.decode(samples / factor).sample
 
                 decoded = vae.decode(samples).sample
-                decoded = decoded.squeeze(0).permute(1, 2, 3, 0).cpu().float()
+                decoded = decoded.squeeze(0).permute(0,2,3, 4, 1).cpu().float()
                 decoded = ((decoded + 1) * 127.5).clamp(0, 255).byte().numpy()
                 print(f"Decoded shape {decoded.shape}")
                 # samples = (samples + 1.0) / 2.0
