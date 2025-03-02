@@ -31,7 +31,7 @@ def create_logger(logging_dir):
     return logging.getLogger(__name__)
 
 
-logger = create_logger("logs")
+
 
 def ds_collate_fn(samples):
     img = []
@@ -87,7 +87,7 @@ def prepare_dataset(dataset):
 
 def main(args):
     #Create logger
-    logger = create_logger(args.results_dir)
+    logger = create_logger("logs")
 
     # Load the dataset
     dataset_path = "nlphuji/flickr30k"
