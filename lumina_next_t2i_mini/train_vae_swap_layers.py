@@ -86,18 +86,20 @@ def main(args):
         ckpt = load_file(
                 f"Lumina-Next-SFT/consolidated_ema.00-of-01.safetensors",
         )
+        # Extend the first layer with the normal weights
+        with torch.no_grad():
+            model.x_cat_emb.weight[:, :model.x_embedder.in_features] = model.x_embedder.weight
+            model.x_cat_emb.bias.copy_(model.x_embedder.bias)
+
+            motion_dim_start = model.x_embedder.in_features
+            model.x_cat_emb.weight[:, motion_dim_start:].zero_()
     else:
         ckpt = load_file(
                 f"custom_ckpt/consolidated_ema.00-of-01.safetensors",
         )
     model.load_state_dict(ckpt, strict=False)
 
-    with torch.no_grad():
-        model.x_cat_emb.weight[:, :model.x_embedder.in_features] = model.x_embedder.weight
-        model.x_cat_emb.bias.copy_(model.x_embedder.bias)
 
-        motion_dim_start = model.x_embedder.in_features
-        model.x_cat_emb.weight[:, motion_dim_start:].zero_()
 
     # Encode captions
     # with torch.no_grad():
