@@ -121,7 +121,7 @@ def main(args):
     start_time = time()
 
     max_steps = 100
-    logger.info(f"Training for {args.max_steps:,} steps...")
+    logger.info(f"Training for {max_steps:,} steps...")
 
     dataloader = DataLoader(dataset['test'], batch_size=2, shuffle=True)
 
