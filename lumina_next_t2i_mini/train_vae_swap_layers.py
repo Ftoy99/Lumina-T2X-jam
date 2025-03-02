@@ -18,6 +18,11 @@ from models.nextditmf import NextDiT
 logger = logging.getLogger(__name__)
 
 
+def ds_collate_fn(samples):
+    print(samples)
+    return samples
+
+
 def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompts, is_train=True):
     captions = []
     for caption in prompt_batch:
@@ -82,12 +87,12 @@ def main(args):
 
     # Creating model
     logger.info(f"Creating model {dataset_path}")
-    model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8,cap_feat_dim=cap_feat_dim)
+    model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
 
     logger.info(f"Loading model model {dataset_path}")
     if args.first_run:
         ckpt = load_file(
-                f"Lumina-Next-SFT/consolidated_ema.00-of-01.safetensors",
+            f"Lumina-Next-SFT/consolidated_ema.00-of-01.safetensors",
         )
         # Extend the first layer with the normal weights
         logger.info(f"Extending x_embedder dimensions")
@@ -99,13 +104,13 @@ def main(args):
             model.x_cat_emb.weight[:, motion_dim_start:].zero_()
     else:
         ckpt = load_file(
-                f"custom_ckpt/consolidated_ema.00-of-01.safetensors",
+            f"custom_ckpt/consolidated_ema.00-of-01.safetensors",
         )
     model.load_state_dict(ckpt, strict=False)
     logger.info(f"Creating ema model")
     model_ema = deepcopy(model)
 
-    #Optimizer
+    # Optimizer
     logger.info(f"Creating optimizer")
     opt = torch.optim.AdamW(model.parameters(), lr=1e-4)
     # Encode captions
@@ -123,11 +128,12 @@ def main(args):
     max_steps = 100
     logger.info(f"Training for {max_steps:,} steps...")
 
-    dataloader = DataLoader(dataset['test'], batch_size=2, shuffle=True)
+    dataloader = DataLoader(dataset['test'], batch_size=2, shuffle=True, collate_fn=ds_collate_fn)
 
     for step, x in enumerate(dataloader):
         print(f"step {step} , x {x}")
         pass
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
