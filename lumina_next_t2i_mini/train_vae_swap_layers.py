@@ -69,6 +69,7 @@ def main():
         .get_decoder()
         .cuda()
     )
+    cap_feat_dim = text_encoder.config.hidden_size
 
     # Load vae
     logger.info(f"Creating vae {dataset_path}")
@@ -77,7 +78,7 @@ def main():
 
     # Creating model
     logger.info(f"Creating model {dataset_path}")
-    model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8)
+    model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8,cap_feat_dim=cap_feat_dim)
 
     logger.info(f"Loading model model {dataset_path}")
     ckpt = load_file(

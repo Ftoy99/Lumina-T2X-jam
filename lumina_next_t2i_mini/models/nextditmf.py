@@ -603,7 +603,7 @@ class NextDiT(nn.Module):
             qk_norm: bool = False,
             cap_feat_dim: int = 5120,
             scale_factor: float = 1.0,
-            use_flash_attn: bool = True,
+            use_flash_attn: bool = True
     ) -> None:
         super().__init__()
         self.learn_sigma = learn_sigma
