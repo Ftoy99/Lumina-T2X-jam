@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import random
@@ -47,7 +48,7 @@ def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompt
     return prompt_embeds, prompt_masks
 
 
-def main():
+def main(args):
     # Load the dataset
     dataset_path = "nlphuji/flickr30k"
     logger.info(f"Loading dataset {dataset_path}")
@@ -81,12 +82,14 @@ def main():
     model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8,cap_feat_dim=cap_feat_dim)
 
     logger.info(f"Loading model model {dataset_path}")
-    ckpt = load_file(
-        os.path.join(
-            args.ckpt,
-            f"consolidated_ema.00-of-01.safetensors",
+    if args.first_run:
+        ckpt = load_file(
+                f"Lumina-Next-SFT/consolidated_ema.00-of-01.safetensors",
         )
-    )
+    else:
+        ckpt = load_file(
+                f"custom_ckpt/consolidated_ema.00-of-01.safetensors",
+        )
     model.load_state_dict(ckpt, strict=False)
 
     with torch.no_grad():
@@ -102,4 +105,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--first_run", type=int, default=False)
+
+    args = parser.parse_known_args()[0]
+    main(args)
