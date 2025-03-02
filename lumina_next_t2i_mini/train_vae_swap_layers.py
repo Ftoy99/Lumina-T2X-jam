@@ -107,7 +107,7 @@ def main(args):
 
     #Optimizer
     logger.info(f"Creating optimizer")
-    opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
+    opt = torch.optim.AdamW(model.parameters(), lr=1e-4)
     # Encode captions
     # with torch.no_grad():
     #     cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, args.caption_dropout_prob)
