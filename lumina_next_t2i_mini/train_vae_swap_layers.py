@@ -10,7 +10,7 @@ from diffusers import AutoencoderKLCogVideoX
 from safetensors.torch import load_file
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from lumina_next_t2i_mini.models.nextditmf import NextDiT
+from models.nextditmf import NextDiT
 
 logger = logging.getLogger(__name__)
 
