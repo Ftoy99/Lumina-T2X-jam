@@ -19,10 +19,12 @@ logger = logging.getLogger(__name__)
 
 
 def ds_collate_fn(samples):
-    print(samples[0])
-    print(samples[1])
-    print(samples[2])
-    return samples
+    img = []
+    caption = []
+    for sample in samples:
+        print(samples[0])
+        print(samples[1])
+    return img,caption
 
 
 def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompts, is_train=True):
@@ -58,11 +60,17 @@ def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompt
     return prompt_embeds, prompt_masks
 
 
+def prepare_dataset(dataset):
+    for x in dataset["test"]:
+        print(x)
+
 def main(args):
     # Load the dataset
     dataset_path = "nlphuji/flickr30k"
     logger.info(f"Loading dataset {dataset_path}")
     dataset = load_dataset(dataset_path)
+
+    dataset = prepare_dataset(dataset)
 
     # Load the tokenizers
     tokenizer_path = "google/gemma-2b"
