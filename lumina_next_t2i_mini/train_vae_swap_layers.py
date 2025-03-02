@@ -76,7 +76,9 @@ def main(args):
     logger.info(f"Loading dataset {dataset_path}")
     dataset = load_dataset(dataset_path)
 
+    logger.info(f"Preprocessing dataset")
     dataset = prepare_dataset(dataset)
+    logger.info(f"Size of dataset after preprocessing is {len(dataset)}")
 
     # Load the tokenizers
     tokenizer_path = "google/gemma-2b"
