@@ -90,13 +90,12 @@ def main(args):
     logger = create_logger("logs")
 
     # Load the dataset
-    dataset_path = "nlphuji/flickr30k"
+    dataset_path = "laion/conceptual-captions-12m-webdataset"
     logger.info(f"Loading dataset {dataset_path}")
     dataset = load_dataset(dataset_path)
 
     logger.info(f"Preprocessing dataset")
     dataset = prepare_dataset(dataset)
-    print(f"Size of dataset after preprocessing is {len(dataset)}")
     logger.info(f"Size of dataset after preprocessing is {len(dataset)}")
 
     # Load the tokenizers
