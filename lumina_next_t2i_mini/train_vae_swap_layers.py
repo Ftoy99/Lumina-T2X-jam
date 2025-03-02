@@ -78,6 +78,7 @@ def main(args):
 
     logger.info(f"Preprocessing dataset")
     dataset = prepare_dataset(dataset)
+    print(f"Size of dataset after preprocessing is {len(dataset)}")
     logger.info(f"Size of dataset after preprocessing is {len(dataset)}")
 
     # Load the tokenizers
