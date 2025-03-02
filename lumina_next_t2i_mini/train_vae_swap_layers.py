@@ -87,6 +87,7 @@ def main(args):
                 f"Lumina-Next-SFT/consolidated_ema.00-of-01.safetensors",
         )
         # Extend the first layer with the normal weights
+        logger.info(f"Extending x_embedder dimensions")
         with torch.no_grad():
             model.x_cat_emb.weight[:, :model.x_embedder.in_features] = model.x_embedder.weight
             model.x_cat_emb.bias.copy_(model.x_embedder.bias)
