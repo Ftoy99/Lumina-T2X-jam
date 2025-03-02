@@ -164,7 +164,7 @@ def main(args):
     max_steps = 100
     logger.info(f"Training for {max_steps:,} steps...")
 
-    dataloader = DataLoader(dataset['test'], batch_size=2, shuffle=True, collate_fn=ds_collate_fn)
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn)
 
     for step, x in enumerate(dataloader):
         print(f"step {step} , x {x}")
