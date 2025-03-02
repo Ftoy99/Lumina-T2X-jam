@@ -125,8 +125,8 @@ def main(args):
 
     dataloader = DataLoader(dataset['test'], batch_size=2, shuffle=True)
 
-    for step, (x, caps) in enumerate(dataloader):
-        print(f"step {step} , x {x} caps {caps}")
+    for step, x in enumerate(dataloader):
+        print(f"step {step} , x {x}")
         pass
 
 if __name__ == '__main__':
