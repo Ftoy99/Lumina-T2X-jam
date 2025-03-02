@@ -90,7 +90,7 @@ def main(args):
     logger = create_logger("logs")
 
     # Load the dataset
-    dataset_path = "laion/conceptual-captions-12m-webdataset"
+    dataset_path = "lmms-lab/COCO-Caption2017"
     logger.info(f"Loading dataset {dataset_path}")
     dataset = load_dataset(dataset_path)
 
