@@ -15,8 +15,23 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from models.nextditmf import NextDiT
 
-logger = logging.getLogger(__name__)
+def create_logger(logging_dir):
+    """
+    Create a logger that writes to a log file and stdout.
+    """
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[\033[34m%(asctime)s\033[0m] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler(f"{logging_dir}/log.txt"),
+        ],
+    )
+    return logging.getLogger(__name__)
 
+
+logger = create_logger("logs")
 
 def ds_collate_fn(samples):
     img = []
@@ -71,6 +86,9 @@ def prepare_dataset(dataset):
     return valid_items
 
 def main(args):
+    #Create logger
+    logger = create_logger(args.results_dir)
+
     # Load the dataset
     dataset_path = "nlphuji/flickr30k"
     logger.info(f"Loading dataset {dataset_path}")
