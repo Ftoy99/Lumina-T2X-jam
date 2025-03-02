@@ -19,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 def ds_collate_fn(samples):
-    print(samples)
+    print(samples["image"])
+    print(samples["caption"])
     return samples
 
 
