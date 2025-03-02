@@ -2,12 +2,15 @@ import argparse
 import logging
 import os
 import random
+from copy import deepcopy
+from time import time
 
 import numpy as np
 import torch
 from datasets import load_dataset
 from diffusers import AutoencoderKLCogVideoX
 from safetensors.torch import load_file
+from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from models.nextditmf import NextDiT
@@ -99,13 +102,32 @@ def main(args):
                 f"custom_ckpt/consolidated_ema.00-of-01.safetensors",
         )
     model.load_state_dict(ckpt, strict=False)
+    logger.info(f"Creating ema model")
+    model_ema = deepcopy(model)
 
-
-
+    #Optimizer
+    logger.info(f"Creating optimizer")
+    opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
     # Encode captions
     # with torch.no_grad():
     #     cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, args.caption_dropout_prob)
 
+    logger.info("Setting model to training")
+    model.train()
+
+    # Variables for monitoring/logging purposes:
+    log_steps = 0
+    running_loss = 0
+    start_time = time()
+
+    max_steps = 100
+    logger.info(f"Training for {args.max_steps:,} steps...")
+
+    dataloader = DataLoader(dataset['test'], batch_size=2, shuffle=True)
+
+    for step, (x, caps) in enumerate(dataloader):
+        print(f"step {step} , x {x} caps {caps}")
+        pass
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
