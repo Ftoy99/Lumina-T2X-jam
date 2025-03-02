@@ -61,8 +61,14 @@ def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompt
 
 
 def prepare_dataset(dataset):
-    for x in dataset["test"]:
-        print(x)
+    valid_items = []
+    min_width = 512
+    min_height = 512
+    for item in dataset["test"]:
+        img = item['image']  # The image is already a PIL Image
+        if img.width >= min_width and img.height >= min_height:
+            valid_items.append(item)
+    return valid_items
 
 def main(args):
     # Load the dataset
