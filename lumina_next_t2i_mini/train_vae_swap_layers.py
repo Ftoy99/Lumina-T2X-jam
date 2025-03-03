@@ -127,7 +127,6 @@ def main(args):
     # logger.info(f"Preprocessing dataset")
     # dataset = prepare_dataset(dataset)
 
-
     # Load the tokenizers
     tokenizer_path = "google/gemma-2b"
     logger.info(f"Loading tokenizer {tokenizer_path}")
@@ -197,9 +196,10 @@ def main(args):
     # Create DataLoader
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn)
 
-    for step, x in enumerate(dataloader):
-        print(f"step {step} , x {x}")
-        pass
+    for step, data in enumerate(dataloader):
+        logger.info(f"Step [{step}]")
+        images, prompts = data
+        print(images, prompts)
 
 
 if __name__ == '__main__':
