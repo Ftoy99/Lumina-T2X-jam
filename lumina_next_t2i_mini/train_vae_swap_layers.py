@@ -210,7 +210,8 @@ def main(args):
             frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
             print(f"frames_tensor shape {frames_tensor.shape}")
             latent = vae.encode(frames_tensor).latent_dist.sample()
-            return latent
+
+            logger.info(f"Frames shapes {latent.shape}")
 
         with torch.no_grad():
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, args.caption_dropout_prob)
