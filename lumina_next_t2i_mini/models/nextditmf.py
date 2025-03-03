@@ -624,7 +624,7 @@ class NextDiT(nn.Module):
 
         self.vae_in = nn.Sequential(
             nn.Conv3d(
-                in_channels=in_channels*4,  # Channels in the input tensor
+                in_channels=in_channels * 4,  # Channels in the input tensor
                 out_channels=in_channels,  # Number of channels you want in the output
                 kernel_size=3,  # You can adjust the kernel size
                 stride=1,  # Adjust the stride if needed
@@ -685,7 +685,7 @@ class NextDiT(nn.Module):
 
         self.vae_out = nn.Sequential(
             nn.Conv3d(
-                in_channels=in_channels*2,  # Channels in the output tensor from decoder
+                in_channels=in_channels * 2,  # Channels in the output tensor from decoder
                 out_channels=in_channels * 4 * 2,  # Number of channels you want in the output
                 kernel_size=3,  # You can adjust the kernel size
                 stride=1,  # Adjust the stride if needed
@@ -737,7 +737,6 @@ class NextDiT(nn.Module):
             #     return x
 
             x = x[:, :L]  # Remains the same meaning this is ok we have as many patches as we should have.
-
 
             x = x.view(B, Hn, Wn, F, pH, pW, self.out_channels)
 
