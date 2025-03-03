@@ -328,7 +328,6 @@ class Attention(nn.Module):
         if n_rep >= 1:
             xk = xk.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
             xv = xv.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
-            print(f"x_mask.shape debug {x_mask.shape}")
         output = (
             F.scaled_dot_product_attention(
                 xq.permute(0, 2, 1, 3),
@@ -727,12 +726,10 @@ class NextDiT(nn.Module):
             #     x = x.permute(0, 5, 1, 3, 2, 4).flatten(4, 5).flatten(2, 3)
             #     return x
 
-            # print(f"Unpatchify x shape {x.shape}")
             x = x[:, :L]  # Remains the same meaning this is ok we have as many patches as we should have.
-            # print(f"Unpatchify x shape after :L {x.shape}")
+
 
             x = x.view(B, Hn, Wn, F, pH, pW, self.out_channels)
-            # print(f"Unpatchify x shape after view {x.shape}")
 
             x = x.permute(0, 6, 3, 1, 4, 2, 5)
             # B C F Hn pH Wn pW
@@ -741,7 +738,6 @@ class NextDiT(nn.Module):
             x = x.flatten(3, 4)
             x = x.flatten(4, 5)
 
-            # print(f"Unpatchify x shape after flatten {x.shape}")
             return x
 
         else:
@@ -769,15 +765,11 @@ class NextDiT(nn.Module):
             # Create the patches
             x = x.view(B, C, F, H // pH, pH, W // pW, pW)  # B C Hn H Wn W # new B C F Hn H Wn W
             x = x.permute(0, 3, 5, 2, 1, 4, 6)  # B Hn Wn C H W # B Hn Wn C F H W
-            # print(f"shape before flat {x.shape}")
             x = x.flatten(4)
-            # print(f"shape after flat {x.shape}")
 
             x = self.x_cat_emb(x)
-            # print(f"shape after embedding{x.shape}")
 
             x = x.flatten(1, 3)
-            # print(f"shape after flat 2{x.shape}")
             mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
 
             return (
@@ -840,20 +832,14 @@ class NextDiT(nn.Module):
         y: (N,) tensor of class labels
         """
         # 16 Channels from vae to 4
-        # print(f"x shape before vae_in {x.shape}")
-
         x = self.vae_in(x)
         xmf = self.vae_in(xmf)
 
-        # print(f"x shape after vae_in {x.shape}")
-
         x_is_tensor = isinstance(x, torch.Tensor)
-        # print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
         x = torch.concat((x, xmf), 1)
-        print(f"x.shape concated {x.shape}")
 
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
-        # print(f"Patches x.shape {x.shape} xmf.shape {xmf.shape}")
+
         freqs_cis = freqs_cis.to(x.device)
 
         t = self.t_embedder(t)  # (N, D)
@@ -865,8 +851,6 @@ class NextDiT(nn.Module):
 
         cap_mask = cap_mask.bool()
         for layer in self.layers:
-            print(f"x.shape concated {x.shape}")
-            print(f"mask.shape concated {mask.shape}")
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         # TODO PASS FRAMES TO MODEL
@@ -874,15 +858,11 @@ class NextDiT(nn.Module):
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
 
-        # print(f"x_out shape before unpatchify {x_out.shape}")
         x_out = self.unpatchify(x_out, img_size, frames_size, return_tensor=x_is_tensor)
         xmf_out = self.unpatchify(xmf_out, img_size, frames_size, return_tensor=x_is_tensor)
-        # print(f"x_out shape after unpatchify {x_out.shape}")
 
-        # print(f"x_out shape before vae_out {x_out.shape}")
         x_out = self.vae_out(x_out)
         xmf_out = self.vae_out(xmf_out)
-        # print(f"x_out shape after vae_out {x_out.shape}")
 
         if self.learn_sigma:
             if x_is_tensor:
@@ -936,9 +916,7 @@ class NextDiT(nn.Module):
         xmf = torch.cat([half, half], dim=0)
 
         out_x, out_xmf = self(x, xmf, t, cap_feats, cap_mask)
-        # print(f"out_x shape in samplle is {out_x.shape}")
         output_x = self.cfg_calc(cfg_scale, out_x)
-        # print(f"out_x shape after cfg in sample is {output_x.shape}")
         output_xmf = self.cfg_calc(cfg_scale, out_xmf)
         return output_x, output_xmf
 
