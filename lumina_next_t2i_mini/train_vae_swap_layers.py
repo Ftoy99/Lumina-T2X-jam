@@ -225,7 +225,7 @@ def main(args):
                 0)
             frames_tensor = frames_tensor.to(torch.float16) / 127.5 - 1  # Normalize
             latent = vae.encode(frames_tensor).latent_dist.sample()
-
+            latent.to(device)
         with torch.no_grad():
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
 
@@ -234,7 +234,7 @@ def main(args):
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
         with torch.cuda.amp.autocast(dtype=torch.float16):
             latent = latent.repeat(2, 1, 1, 1, 1)
-            latent.to(device)
+
             loss_dict = training_losses(model, latent, latent, model_kwargs)
             loss = loss_dict["loss"].sum()
             loss_item += loss.item()
