@@ -58,7 +58,7 @@ def training_losses(model, x1, mf1, model_kwargs=None):
             dim=0,
         )
         terms["mf_loss"] = th.stack(
-            [((mfut[i] - model_output[i]) ** 2).mean() for i in range(B)],
+            [((mfut[i] - model_output_mf[i]) ** 2).mean() for i in range(B)],
             dim=0,
         )
     else:
