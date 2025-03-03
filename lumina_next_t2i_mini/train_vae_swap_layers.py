@@ -24,6 +24,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 total_memory = torch.cuda.get_device_properties(device).total_memory
 vae_scale = 0.13025
 
+
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
         self.folder = folder
@@ -204,8 +205,12 @@ def main(args):
     logger.info(f"Training for {max_steps:,} steps...")
 
     # Create DataLoader
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
 
+    # Create scaler
+    scaler = torch.cuda.amp.GradScaler()
+
+    # Training loop
     for step, data in enumerate(dataloader):
         logger.info(f"Step [{step}]")
 
@@ -240,18 +245,19 @@ def main(args):
         loss_item = 0.0
         opt.zero_grad()
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
-        scaler = torch.cuda.amp.GradScaler()
+
+        # Forward pass
         with torch.cuda.amp.autocast(dtype=torch.float32):
-            # latent = latent.repeat(2, 1, 1, 1, 1)
             loss_dict = training_losses(model, latent, latent, model_kwargs)
-            logger.info(f"loss dict {loss_dict}")
-            loss = loss_dict["loss"].sum()
-            # Scale the loss before backpropagation
-            scaler.scale(loss).backward()
-            scaler.step(opt)
-            scaler.update()  # Update the scaler
-            loss_item += loss.item()
-            logger.info(f"Loss {loss}")
+
+        logger.info(f"loss dict {loss_dict}")
+        loss = loss_dict["loss"].sum()
+        # Scale the loss before backpropagation
+        scaler.scale(loss).backward()
+        scaler.step(opt)
+        scaler.update()  # Update the scaler
+        loss_item += loss.item()
+        logger.info(f"Loss {loss}")
 
 
 if __name__ == '__main__':
