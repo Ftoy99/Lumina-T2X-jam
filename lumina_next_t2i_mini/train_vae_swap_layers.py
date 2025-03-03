@@ -234,7 +234,7 @@ def main(args):
             frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(
                 0)
             frames_tensor = frames_tensor.to(torch.float16).to(device) / 127.5 - 1  # Normalize
-            latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)[0]
+            latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
             assert not torch.isnan(latent).any(), "NaN detected in latent!"
             latent = latent.to(device)
         with torch.no_grad():
