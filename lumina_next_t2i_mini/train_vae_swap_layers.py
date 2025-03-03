@@ -1,4 +1,5 @@
 import argparse
+import gc
 import json
 import logging
 import os
@@ -161,7 +162,7 @@ def main(args):
 
     logger.info(f"Quantization vae")
     vae = torch.quantization.quantize_dynamic(vae, dtype=torch.qint8)
-
+    torch.cuda.empty_cache()
     # Creating model
     logger.info(f"Creating model {dataset_path}")
     model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
@@ -212,6 +213,8 @@ def main(args):
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn)
 
     for step, data in enumerate(dataloader):
+        torch.cuda.empty_cache()
+        gc.collect()
         logger.info(f"Step [{step}]")
         images, caps = data
 
