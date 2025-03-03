@@ -328,6 +328,10 @@ class Attention(nn.Module):
         if n_rep >= 1:
             xk = xk.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
             xv = xv.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
+        print(f"[Attention Debug] x_mask {x_mask.shape}")
+        print(f"[Attention Debug] bsz {bsz}")
+        print(f"[Attention Debug] seqlen {seqlen}")
+        print(f"[Attention Debug] x_mask.bool().view(bsz, 1, 1, seqlen) {x_mask.bool().view(bsz, 1, 1, seqlen).shape}")
         output = (
             F.scaled_dot_product_attention(
                 xq.permute(0, 2, 1, 3),

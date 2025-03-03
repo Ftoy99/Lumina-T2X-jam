@@ -215,25 +215,19 @@ def main(args):
         with torch.no_grad():
             frames_resized = np.array(
                 [cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
-            print(f"np array frames shape {frames_resized.shape}")  # np array frames shape (708, 512, 512, 3)
             #  batch_size, num_channels, num_frames, height, width = x.shape
             frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(
                 0)
             frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
-            print(f"frames_tensor shape {frames_tensor.shape}")
             latent = vae.encode(frames_tensor).latent_dist.sample()
-            logger.info(f"Frames shapes {latent.shape}")
 
         with torch.no_grad():
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
-            print(f"cap_feats shape {cap_feats.shape}")
-            print(f"cap_mask shape {cap_mask.shape}")
 
         loss_item = 0.0
         opt.zero_grad()
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
         with torch.cuda.amp.autocast(dtype=torch.float16):
-            latent = latent.repeat(1,1,5,1,1)
             loss_dict = training_losses(model, latent, latent, model_kwargs)
             loss = loss_dict["loss"].sum()
             loss_item += loss.item()
