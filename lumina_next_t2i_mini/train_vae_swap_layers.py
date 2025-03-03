@@ -35,21 +35,17 @@ class ImageTextDataset(Dataset):
         return len(self.file_pairs)
 
     def __getitem__(self, idx):
-        items = []
-        for i in idx:
-            img_path, json_path = self.file_pairs[i]
+        img_path, json_path = self.file_pairs[idx]
 
-            # Load image
-            image = Image.open(img_path).convert("RGB")
+        # Load image
+        image = Image.open(img_path).convert("RGB")
 
-            # Load JSON and get the prompt
-            with open(json_path, "r") as f:
-                metadata = json.load(f)
-                prompt = metadata.get("prompt", "")
+        # Load JSON and get the prompt
+        with open(json_path, "r") as f:
+            metadata = json.load(f)
+            prompt = metadata.get("prompt", "")
 
-            items.append({"image": image, "prompt": prompt})
-
-        return items  # Return list of images and prompts (batch)
+        items.append({"image": image, "prompt": prompt})
 
 
 def create_logger(logging_dir):
