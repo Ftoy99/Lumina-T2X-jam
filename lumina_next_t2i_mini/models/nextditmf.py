@@ -522,6 +522,7 @@ class TransformerBlock(nn.Module):
         if adaln_input is not None:
             # print(f"[adaln Transformer block] x_mask shape {x_mask.shape}")
             # print(f"[adaln Transformer block] x_mask shape {x.shape}")
+            assert not torch.any(torch.isnan(adaln_input)), "NaN detected in adaln_input before attention"
             scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
             assert not torch.any(torch.isnan(x)), "NaN detected in x before attention"
 
