@@ -160,6 +160,7 @@ def main(args):
     # Creating model
     logger.info(f"Creating model {dataset_path}")
     model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
+    model.half()
 
     logger.info(f"Loading model model {dataset_path}")
     if args.first_run:
