@@ -534,11 +534,11 @@ class TransformerBlock(nn.Module):
                 )
             )
             assert not torch.any(torch.isnan(x)), "NaN detected in x after attention"
-            x = x + gate_mlp.unsqueeze(1).tanh() * self.ffn_norm2(
-                self.feed_forward(
-                    modulate(self.ffn_norm1(x), scale_mlp),
-                )
-            )
+            # x = x + gate_mlp.unsqueeze(1).tanh() * self.ffn_norm2(
+            #     self.feed_forward(
+            #         modulate(self.ffn_norm1(x), scale_mlp),
+            #     )
+            # )
             assert not torch.any(torch.isnan(x)), "NaN detected in x after feed_forward"
         else:
             x = x + self.attention_norm2(
