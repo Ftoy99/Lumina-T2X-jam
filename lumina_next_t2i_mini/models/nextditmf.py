@@ -831,8 +831,7 @@ class NextDiT(nn.Module):
             return x_embed, mask, img_size, freqs_cis
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
-        print(f"x SHHAPE {x.shape}")
-        print(f"xmf SHHAPE {xmf.shape}")
+
         """
         Forward pass of NextDiT.
         t: (N,) tensor of diffusion timesteps
@@ -846,6 +845,8 @@ class NextDiT(nn.Module):
         x = torch.concat((x, xmf), 1)
 
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
+        print(f"Patchify x Shape {x.shape}")
+        print(f"Patchify mask Shape {mask.shape}")
 
         freqs_cis = freqs_cis.to(x.device)
 
