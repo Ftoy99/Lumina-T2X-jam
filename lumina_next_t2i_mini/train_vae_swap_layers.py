@@ -241,7 +241,7 @@ def main(args):
         opt.zero_grad()
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
         scaler = torch.cuda.amp.GradScaler()
-        with torch.cuda.amp.autocast(dtype=torch.float16):
+        with torch.cuda.amp.autocast(dtype=torch.float32):
             # latent = latent.repeat(2, 1, 1, 1, 1)
             loss_dict = training_losses(model, latent, latent, model_kwargs)
             logger.info(f"loss dict {loss_dict}")
