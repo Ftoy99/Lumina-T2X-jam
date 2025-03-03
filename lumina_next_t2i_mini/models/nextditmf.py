@@ -849,7 +849,8 @@ class NextDiT(nn.Module):
         x_is_tensor = isinstance(x, torch.Tensor)
         # print(f"x.shape {x.shape} xmf.shape {xmf.shape}")
         x = torch.concat((x, xmf), 1)
-        # print(f"x.shape concated {x.shape}")
+        print(f"x.shape concated {x.shape}")
+
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
         # print(f"Patches x.shape {x.shape} xmf.shape {xmf.shape}")
         freqs_cis = freqs_cis.to(x.device)
@@ -863,6 +864,8 @@ class NextDiT(nn.Module):
 
         cap_mask = cap_mask.bool()
         for layer in self.layers:
+            print(f"x.shape concated {x.shape}")
+            print(f"mask.shape concated {mask.shape}")
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         # TODO PASS FRAMES TO MODEL
