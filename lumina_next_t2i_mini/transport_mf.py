@@ -63,6 +63,7 @@ def training_losses(model, x1, mf1, model_kwargs=None):
             dim=0,
         )
     else:
+        print((model_output - ut))
         terms["loss"] = ((model_output - ut) ** 2).mean(dim=list(range(1, ut.ndim)))
         terms["mf_loss"] = ((model_output_mf - mfut) ** 2).mean(dim=list(range(1, mfut.ndim)))
 
