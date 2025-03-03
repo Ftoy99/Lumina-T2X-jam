@@ -196,13 +196,10 @@ def main(args):
     logger.info("Setting model to training")
     model.train()
 
-    # Variables for monitoring/logging purposes:
-    log_steps = 0
-    running_loss = 0
-    start_time = time()
-
     max_steps = 100
     logger.info(f"Training for {max_steps:,} steps...")
+
+    accumulation_steps = 50
 
     # Create DataLoader
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
@@ -243,19 +240,24 @@ def main(args):
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
 
         loss_item = 0.0
-        opt.zero_grad()
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
 
         # Forward pass
         with torch.cuda.amp.autocast(dtype=torch.float32):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
 
-        logger.info(f"loss dict {loss_dict}")
         loss = loss_dict["loss"].sum()
-        # Scale the loss before backpropagation
+        # Scale loss
         scaler.scale(loss).backward()
-        scaler.step(opt)
-        scaler.update()  # Update the scaler
+
+        logger.info(f"Loss is {loss} for step {step}")
+
+        if (step + 1) % accumulation_steps == 0:
+            logger.info("Stepping optimizer")
+            scaler.step(opt)
+            scaler.update()
+            opt.zero_grad()
+
         loss_item += loss.item()
         logger.info(f"Loss {loss}")
 
