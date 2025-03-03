@@ -328,11 +328,11 @@ class Attention(nn.Module):
         if n_rep >= 1:
             xk = xk.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
             xv = xv.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
-        print(f"[Attention Debug] x {x.shape}")
-        print(f"[Attention Debug] x_mask {x_mask.shape}")
-        print(f"[Attention Debug] bsz {bsz}")
-        print(f"[Attention Debug] seqlen {seqlen}")
-        print(f"[Attention Debug] x_mask.bool().view(bsz, 1, 1, seqlen) {x_mask.bool().view(bsz, 1, 1, seqlen).shape}")
+        # print(f"[Attention Debug] x {x.shape}")
+        # print(f"[Attention Debug] x_mask {x_mask.shape}")
+        # print(f"[Attention Debug] bsz {bsz}")
+        # print(f"[Attention Debug] seqlen {seqlen}")
+        # print(f"[Attention Debug] x_mask.bool().view(bsz, 1, 1, seqlen) {x_mask.bool().view(bsz, 1, 1, seqlen).shape}")
         output = (
             F.scaled_dot_product_attention(
                 xq.permute(0, 2, 1, 3),
@@ -517,11 +517,11 @@ class TransformerBlock(nn.Module):
                 feedforward layers.
 
         """
-        print(f"[Debug Transformer block] x shape {x.shape}")
-        print(f"[Debug Transformer block] x_mask shape {x_mask.shape}")
+        # print(f"[Debug Transformer block] x shape {x.shape}")
+        # print(f"[Debug Transformer block] x_mask shape {x_mask.shape}")
         if adaln_input is not None:
-            print(f"[adaln Transformer block] x_mask shape {x_mask.shape}")
-            print(f"[adaln Transformer block] x_mask shape {x.shape}")
+            # print(f"[adaln Transformer block] x_mask shape {x_mask.shape}")
+            # print(f"[adaln Transformer block] x_mask shape {x.shape}")
             scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
 
             x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
@@ -540,7 +540,7 @@ class TransformerBlock(nn.Module):
             )
 
         else:
-            print(f"[not adaln Transformer block] x_mask shape {x_mask.shape}")
+            # print(f"[not adaln Transformer block] x_mask shape {x_mask.shape}")
             x = x + self.attention_norm2(
                 self.attention(
                     self.attention_norm1(x),
@@ -849,8 +849,8 @@ class NextDiT(nn.Module):
         x_is_tensor = isinstance(x, torch.Tensor)
         x = torch.concat((x, xmf), 1)
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
-        print(f"Patchify x Shape {x.shape}")
-        print(f"Patchify mask Shape {mask.shape}")
+        # print(f"Patchify x Shape {x.shape}")
+        # print(f"Patchify mask Shape {mask.shape}")
 
         freqs_cis = freqs_cis.to(x.device)
 
@@ -863,8 +863,8 @@ class NextDiT(nn.Module):
 
         cap_mask = cap_mask.bool()
         for layer in self.layers:
-            print(f"Patchify before layer x Shape {x.shape}")
-            print(f"Patchify before layer xmask Shape {mask.shape}")
+            # print(f"Patchify before layer x Shape {x.shape}")
+            # print(f"Patchify before layer xmask Shape {mask.shape}")
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         # TODO PASS FRAMES TO MODEL

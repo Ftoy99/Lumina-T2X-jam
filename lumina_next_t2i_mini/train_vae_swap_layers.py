@@ -159,6 +159,7 @@ def main(args):
     vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
         "cuda")
 
+    logger.info(f"Quantization vae")
     vae = torch.quantization.quantize_dynamic(vae, dtype=torch.qint8)
 
     # Creating model
