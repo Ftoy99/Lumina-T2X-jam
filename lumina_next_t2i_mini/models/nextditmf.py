@@ -862,21 +862,23 @@ class NextDiT(nn.Module):
 
         cap_mask = cap_mask.bool()
         for layer in self.layers:
-            # print(f"Patchify before layer x Shape {x.shape}")
-            # print(f"Patchify before layer xmask Shape {mask.shape}")
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
-        # TODO PASS FRAMES TO MODEL
 
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
 
+        # TODO PASS FRAMES TO MODEL
         frames_size = 1
         x_out = self.unpatchify(x_out, img_size, frames_size, return_tensor=x_is_tensor)
         xmf_out = self.unpatchify(xmf_out, img_size, frames_size, return_tensor=x_is_tensor)
 
+        assert not torch.isnan(x_out).any(), "NaN detected before vae_out x_out!"
+        assert not torch.isnan(xmf_out).any(), "NaN detected before vae_out xmf_out!"
         x_out = self.vae_out(x_out)
         xmf_out = self.vae_out(xmf_out)
+        assert not torch.isnan(x_out).any(), "NaN detected after vae_out x_out!"
+        assert not torch.isnan(xmf_out).any(), "NaN detected after vae_out xmf_out!"
 
         if self.learn_sigma:
             if x_is_tensor:
