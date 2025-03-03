@@ -1,6 +1,12 @@
 import torch as th
 from torchdiffeq import odeint
 
+from torch.utils.checkpoint import checkpoint
+
+
+def checkpointed_forward(model, xt, mft, t, **model_kwargs):
+    return model(xt, mft, t, **model_kwargs)
+
 
 def sample(x1, mf1):
     """Sampling x0 & t based on shape of x1 (if needed)
@@ -49,7 +55,8 @@ def training_losses(model, x1, mf1, model_kwargs=None):
         mft = t_ * mf1 + (1 - t_) * mf0
         mfut = mf1 - mf0
 
-    model_output, model_output_mf = model(xt, mft, t, **model_kwargs)
+    # Use checkpointing here to save memory during the forward pass
+    model_output, model_output_mf = checkpoint(checkpointed_forward, model, xt, mft, t, **model_kwargs)
 
     terms = {}
 
