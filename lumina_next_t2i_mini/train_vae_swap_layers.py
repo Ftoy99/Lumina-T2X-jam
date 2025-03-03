@@ -1,4 +1,5 @@
 import argparse
+import json
 import logging
 import os
 import random
@@ -7,13 +8,41 @@ from time import time
 
 import numpy as np
 import torch
-from datasets import load_dataset
+from PIL import Image
+from datasets import load_dataset, Dataset
 from diffusers import AutoencoderKLCogVideoX
 from safetensors.torch import load_file
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from models.nextditmf import NextDiT
+
+class ImageTextDataset(Dataset):
+    def __init__(self, folder):
+        self.folder = folder
+        self.data = []
+
+        # Find all jpg images and their corresponding json files
+        for file in os.listdir(folder):
+            if file.endswith(".jpg"):
+                img_path = os.path.join(folder, file)
+                json_path = os.path.join(folder, file.replace(".jpg", ".json"))
+                if os.path.exists(json_path):
+                    self.data.append((img_path, json_path))
+    def __len__(self):
+        return len(self.data)
+    def __getitem__(self, idx):
+        img_path, json_path = self.data[idx]
+
+        # Load image on demand
+        image = Image.open(img_path).convert("RGB")
+
+        # Load JSON on demand
+        with open(json_path, "r") as f:
+            metadata = json.load(f)
+            prompt = metadata.get("prompt", "")
+
+        return {"image": image, "prompt": prompt}
 
 def create_logger(logging_dir):
     """
@@ -31,15 +60,10 @@ def create_logger(logging_dir):
     return logging.getLogger(__name__)
 
 
-
-
-def ds_collate_fn(samples):
-    img = []
-    caption = []
-    for sample in samples:
-        print(samples[0])
-        print(samples[1])
-    return img,caption
+def ds_collate_fn(batch):
+    images = [item["image"] for item in batch]
+    prompts = [item["prompt"] for item in batch]
+    return images, prompts
 
 
 def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompts, is_train=True):
@@ -85,14 +109,15 @@ def prepare_dataset(dataset):
             valid_items.append(item)
     return valid_items
 
+
 def main(args):
-    #Create logger
+    # Create logger
     logger = create_logger("logs")
 
     # Load the dataset
-    dataset_path = "kakaobrain/coyo-700m"
+    dataset_path = "/mnt/jimmys/dataset_jacky/data"
     logger.info(f"Loading dataset {dataset_path}")
-    dataset = load_dataset(dataset_path)
+    dataset = ImageTextDataset()
 
     logger.info(f"Preprocessing dataset")
     dataset = prepare_dataset(dataset)
@@ -164,6 +189,7 @@ def main(args):
     max_steps = 100
     logger.info(f"Training for {max_steps:,} steps...")
 
+    # Create DataLoader
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn)
 
     for step, x in enumerate(dataloader):
