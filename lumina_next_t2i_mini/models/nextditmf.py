@@ -858,8 +858,8 @@ class NextDiT(nn.Module):
 
         cap_mask = cap_mask.bool()
         for layer in self.layers:
-            print(f"Patchify x Shape {x.shape}")
-            print(f"Patchify mask Shape {mask.shape}")
+            print(f"Patchify before layer x Shape {x.shape}")
+            print(f"Patchify before layer xmask Shape {mask.shape}")
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         # TODO PASS FRAMES TO MODEL
