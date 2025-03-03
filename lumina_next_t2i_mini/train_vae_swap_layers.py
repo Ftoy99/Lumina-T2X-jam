@@ -245,7 +245,7 @@ def main(args):
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
         with torch.cuda.amp.autocast(dtype=torch.float16,enabled=False):
             # latent = latent.repeat(2, 1, 1, 1, 1)
-            latent = latent.to(torch.bfloat16)  # Convert latent to BFloat16
+            latent = latent.to(torch.float32)
             loss_dict = training_losses(model, latent, latent, model_kwargs)
             logger.info(f"loss dict {loss_dict}")
             loss = loss_dict["loss"].sum()
