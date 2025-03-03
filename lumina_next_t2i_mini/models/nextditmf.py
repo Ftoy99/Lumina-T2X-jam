@@ -526,8 +526,12 @@ class TransformerBlock(nn.Module):
             scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
             assert not torch.any(torch.isnan(x)), "NaN detected in x before attention"
 
-            print(f"Max value before attn: {torch.max(x)}")
-            print(f"Min value before attn: {torch.min(x)}")
+            print(f"Max value scale_msa: {torch.max(scale_msa)}")
+            print(f"Min value before attn: {torch.min(scale_msa)}")
+
+            print(f"Max value scale_mlp: {torch.max(scale_mlp)}")
+            print(f"Min value scale_mlp: {torch.min(scale_mlp)}")
+
             x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
                 self.attention(
                     modulate(self.attention_norm1(x), scale_msa),
