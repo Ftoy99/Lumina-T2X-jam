@@ -209,6 +209,7 @@ def main(args):
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=ds_collate_fn,pin_memory=False)
 
     for step, data in enumerate(dataloader):
+        logger.info(f"Step [{step}]")
         allocated_memory = torch.cuda.memory_allocated(device)
         reserved_memory = torch.cuda.memory_reserved(device)
         available_memory = total_memory - reserved_memory
@@ -219,7 +220,7 @@ def main(args):
 
         torch.cuda.empty_cache()
         gc.collect()
-        logger.info(f"Step [{step}]")
+
         images, caps = data
 
         with torch.no_grad():
