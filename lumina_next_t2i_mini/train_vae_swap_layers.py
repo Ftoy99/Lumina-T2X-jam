@@ -1,3 +1,4 @@
+
 import argparse
 import gc
 import json
@@ -167,7 +168,7 @@ def main(args):
     logger.info(f"Creating model {dataset_path}")
     model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
     model.to(device)
-    # model.half()
+    model.half()
     torch.cuda.synchronize()
 
     logger.info(f"Loading model model {dataset_path}")
@@ -209,10 +210,12 @@ def main(args):
 
     # Training loop
     for step, data in enumerate(dataloader):
+        # Logging
         logger.info(f"Step [{step}]")
 
         logger.info("Empty Cache")
         torch.cuda.empty_cache()
+        gc.collect()
 
         allocated_memory = torch.cuda.memory_allocated(device)
         reserved_memory = torch.cuda.memory_reserved(device)
@@ -222,19 +225,19 @@ def main(args):
         logger.info(f"Reserved memory: {reserved_memory / 1e9:.2f} GB")
         logger.info(f"Available memory (estimated): {available_memory / 1e9:.2f} GB")
 
-        gc.collect()
-
         images, caps = data
 
+        frames_resized = np.array(
+            [cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
+        #  batch_size, num_channels, num_frames, height, width = x.shape
+        frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(0)
+        frames_tensor = frames_tensor.to(torch.float16).to(device) / 127.5 - 1  # Normalize
+
         with torch.no_grad():
-            frames_resized = np.array(
-                [cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
-            #  batch_size, num_channels, num_frames, height, width = x.shape
-            frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(0)
-            frames_tensor = frames_tensor.to(torch.float16).to(device) / 127.5 - 1  # Normalize
             latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
             assert not torch.isnan(latent).any(), "NaN detected in latent!"
             latent = latent.to(device)
+
         with torch.no_grad():
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
 
@@ -242,7 +245,7 @@ def main(args):
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
 
         # Forward pass
-        with torch.cuda.amp.autocast(dtype=torch.float32):
+        with torch.cuda.amp.autocast(dtype=torch.float16):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
 
         loss = loss_dict["loss"].sum()
