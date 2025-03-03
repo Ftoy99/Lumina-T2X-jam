@@ -122,7 +122,7 @@ def prepare_dataset(dataset):
 
 
 def main(args):
-    torch.cuda.set_device(device)
+    torch.cuda.set_device(0)
 
     # Create logger
     logger = create_logger("logs")
