@@ -23,7 +23,7 @@ from models.nextditmf import NextDiT
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 total_memory = torch.cuda.get_device_properties(device).total_memory
 vae_scale = 0.13025
-
+torch.set_float32_matmul_precision('high')
 
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
