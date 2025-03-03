@@ -4,8 +4,6 @@ import json
 import logging
 import os
 import random
-from copy import deepcopy
-from time import time
 
 import numpy
 import numpy as np
@@ -190,7 +188,7 @@ def main(args):
 
     # Model compile and checkpoint
     model.half()
-    model = torch.compile(model, mode="reduce-overhead")
+    # model = torch.compile(model, mode="reduce-overhead")
 
     # Optimizer
     logger.info(f"Creating optimizer")
@@ -250,9 +248,9 @@ def main(args):
         loss_item = 0.0
 
         # For torch compile speed up
-        latent = latent.contiguous()
-        cap_feats = cap_feats.contiguous()
-        cap_mask = cap_mask.contiguous()
+        # latent = latent.contiguous()
+        # cap_feats = cap_feats.contiguous()
+        # cap_mask = cap_mask.contiguous()
 
         model_kwargs = dict(cap_feats=cap_feats.contiguous(), cap_mask=cap_mask.contiguous())
 
