@@ -22,7 +22,7 @@ from models.nextditmf import NextDiT
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 total_memory = torch.cuda.get_device_properties(device).total_memory
-
+vae_scale = 0.13025
 
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
@@ -234,7 +234,7 @@ def main(args):
             frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(
                 0)
             frames_tensor = frames_tensor.to(torch.float16).to(device) / 127.5 - 1  # Normalize
-            latent = vae.encode(frames_tensor).latent_dist.sample()
+            latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)[0]
             assert not torch.isnan(latent).any(), "NaN detected in latent!"
             latent = latent.to(device)
         with torch.no_grad():
