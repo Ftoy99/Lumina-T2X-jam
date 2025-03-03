@@ -314,8 +314,8 @@ class Attention(nn.Module):
         xk = xk.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
         xv = xv.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
 
-        # xq = Attention.apply_rotary_emb(xq, freqs_cis=freqs_cis)
-        # xk = Attention.apply_rotary_emb(xk, freqs_cis=freqs_cis)
+        xq = Attention.apply_rotary_emb(xq, freqs_cis=freqs_cis)
+        xk = Attention.apply_rotary_emb(xk, freqs_cis=freqs_cis)
 
         xq, xk = xq.to(dtype), xk.to(dtype)
 
@@ -523,7 +523,7 @@ class TransformerBlock(nn.Module):
             # print(f"[adaln Transformer block] x_mask shape {x_mask.shape}")
             # print(f"[adaln Transformer block] x_mask shape {x.shape}")
             scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
-
+            assert not torch.any(torch.isnan(x)), "NaN detected in x before attention"
             x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
                 self.attention(
                     modulate(self.attention_norm1(x), scale_msa),
@@ -533,14 +533,14 @@ class TransformerBlock(nn.Module):
                     y_mask,
                 )
             )
+            assert not torch.any(torch.isnan(x)), "NaN detected in x after attention"
             x = x + gate_mlp.unsqueeze(1).tanh() * self.ffn_norm2(
                 self.feed_forward(
                     modulate(self.ffn_norm1(x), scale_mlp),
                 )
             )
-
+            assert not torch.any(torch.isnan(x)), "NaN detected in x after feed_forward"
         else:
-            # print(f"[not adaln Transformer block] x_mask shape {x_mask.shape}")
             x = x + self.attention_norm2(
                 self.attention(
                     self.attention_norm1(x),
