@@ -186,8 +186,6 @@ def main(args):
             f"custom_ckpt/consolidated_ema.00-of-01.safetensors",
         )
     model.load_state_dict(ckpt, strict=False)
-    logger.info(f"Creating ema model")
-    model_ema = deepcopy(model)
 
     # Optimizer
     logger.info(f"Creating optimizer")
