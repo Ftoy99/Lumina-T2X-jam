@@ -6,6 +6,7 @@ import random
 from copy import deepcopy
 from time import time
 
+import numpy
 import numpy as np
 import torch
 from PIL import Image
@@ -201,7 +202,7 @@ def main(args):
         images, caps = data
 
         with torch.no_grad():
-            frames_resized = np.array([cv2.resize(frame, (512, 512)) for frame in images])  # Resize all frames
+            frames_resized = np.array([cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
             print(f"np array frames shape {frames_resized.shape}")  # np array frames shape (708, 512, 512, 3)
             #  batch_size, num_channels, num_frames, height, width = x.shape
             frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(
