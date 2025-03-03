@@ -214,7 +214,7 @@ def main(args):
             logger.info(f"Frames shapes {latent.shape}")
 
         with torch.no_grad():
-            cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, args.caption_dropout_prob)
+            cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)
 
 
 if __name__ == '__main__':
