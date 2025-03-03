@@ -1,4 +1,3 @@
-
 import argparse
 import gc
 import json
@@ -168,7 +167,6 @@ def main(args):
     logger.info(f"Creating model {dataset_path}")
     model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
     model.to(device)
-    model.half()
     torch.cuda.synchronize()
 
     logger.info(f"Loading model model {dataset_path}")
@@ -189,6 +187,11 @@ def main(args):
             f"custom_ckpt/consolidated_ema.00-of-01.safetensors",
         )
     model.load_state_dict(ckpt, strict=False)
+
+    # Model compile and checkpoint
+    model.half()
+    model = torch.compile(model)
+    model.gradient_checkpointing_enable()
 
     # Optimizer
     logger.info(f"Creating optimizer")
@@ -230,13 +233,17 @@ def main(args):
         frames_resized = np.array(
             [cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
         #  batch_size, num_channels, num_frames, height, width = x.shape
-        frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(0)
-        frames_tensor = frames_tensor.to(torch.float16).to(device) / 127.5 - 1  # Normalize
+        frames_tensor = torch.from_numpy(frames_resized).permute(3, 0, 1, 2).unsqueeze(0)
+        frames_tensor = frames_tensor.to(device=device, dtype=torch.float16, non_blocking=True) / 127.5 - 1  # Normalize
 
         with torch.no_grad():
             latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
             assert not torch.isnan(latent).any(), "NaN detected in latent!"
             latent = latent.to(device)
+
+        del frames_tensor
+        torch.cuda.empty_cache()
+        gc.collect()
 
         with torch.no_grad():
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
@@ -249,6 +256,7 @@ def main(args):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
 
         loss = loss_dict["loss"].sum()
+        scaler.unscale_(opt)
         scaler.scale(loss).backward()
 
         logger.info(f"Loss is {loss} for step {step}")
