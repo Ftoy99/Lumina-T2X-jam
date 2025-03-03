@@ -159,6 +159,7 @@ def main(args):
     logger.info(f"Creating vae {dataset_path}")
     vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
         "cpu")
+    torch.quantization.quantize_dynamic(vae, dtype=torch.qint8)
 
     torch.cuda.empty_cache()
     # Creating model
@@ -208,7 +209,7 @@ def main(args):
     logger.info(f"Training for {max_steps:,} steps...")
 
     # Create DataLoader
-    dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn)
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn,pin_memory=False)
 
     for step, data in enumerate(dataloader):
         torch.cuda.empty_cache()
