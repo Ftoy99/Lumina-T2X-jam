@@ -546,7 +546,7 @@ class TransformerBlock(nn.Module):
             assert not torch.any(torch.isnan(x)), "NaN detected in x after attention"
 
             modulated = modulate(self.ffn_norm1(x), scale_mlp)
-            modulated = torch.clamp(modulated, min=-5, max=5)
+            modulated = torch.clamp(modulated, min=-10, max=10)
             print(f"Max value after modulate: {torch.max(modulated)}")
             print(f"Min value after modulate: {torch.min(modulated)}")
 
