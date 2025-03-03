@@ -166,7 +166,7 @@ def main(args):
     logger.info(f"Creating model {dataset_path}")
     model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
     model.to(device)
-    model.half()
+    # model.half()
     torch.cuda.synchronize()
 
     logger.info(f"Loading model model {dataset_path}")
@@ -240,7 +240,7 @@ def main(args):
         loss_item = 0.0
         opt.zero_grad()
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
-        with torch.cuda.amp.autocast(dtype=torch.float16):
+        with torch.cuda.amp.autocast(dtype=torch.float32):
             # latent = latent.repeat(2, 1, 1, 1, 1)
             loss_dict = training_losses(model, latent, latent, model_kwargs)
             logger.info(f"loss dict {loss_dict}")
