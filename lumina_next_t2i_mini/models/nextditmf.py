@@ -847,7 +847,6 @@ class NextDiT(nn.Module):
         assert not torch.isnan(x).any(), "NaN detected after vae_in x!"
         assert not torch.isnan(xmf).any(), "NaN detected after vae_in xmf!"
 
-
         x_is_tensor = isinstance(x, torch.Tensor)
         x = torch.concat((x, xmf), 1)
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
@@ -867,9 +866,11 @@ class NextDiT(nn.Module):
         for layer in self.layers:
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
-
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
+        assert not torch.isnan(x_out).any(), "NaN detected after final_layer x_out!"
+        assert not torch.isnan(xmf_out).any(), "NaN detected after final_layer_xmf xmf_out!"
+
 
         # TODO PASS FRAMES TO MODEL
         frames_size = 1
