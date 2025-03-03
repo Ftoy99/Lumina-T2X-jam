@@ -37,7 +37,7 @@ class ImageTextDataset(Dataset):
     def __getitem__(self, idx):
         items = []
         for id in idx:
-            img_path, json_path = self.file_pairs[idx]
+            img_path, json_path = self.file_pairs[id]
 
             # Load image on demand
             image = Image.open(img_path).convert("RGB")
