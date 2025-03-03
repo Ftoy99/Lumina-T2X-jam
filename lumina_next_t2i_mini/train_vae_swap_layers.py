@@ -188,7 +188,7 @@ def main(args):
 
     # Model compile and checkpoint
     model.half()
-    # model = torch.compile(model, mode="reduce-overhead")
+    torch.compile(model, mode="max-autotune")
 
     # Optimizer
     logger.info(f"Creating optimizer")
@@ -248,9 +248,9 @@ def main(args):
         loss_item = 0.0
 
         # For torch compile speed up
-        # latent = latent.contiguous()
-        # cap_feats = cap_feats.contiguous()
-        # cap_mask = cap_mask.contiguous()
+        latent = latent.contiguous()
+        cap_feats = cap_feats.contiguous()
+        cap_mask = cap_mask.contiguous()
 
         model_kwargs = dict(cap_feats=cap_feats.contiguous(), cap_mask=cap_mask.contiguous())
 
