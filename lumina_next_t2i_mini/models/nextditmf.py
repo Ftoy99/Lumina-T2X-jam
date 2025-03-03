@@ -864,9 +864,12 @@ class NextDiT(nn.Module):
         cap_emb = self.cap_embedder(cap_feats_pool)
         adaln_input = t + cap_emb
 
-        cap_mask = cap_mask.bool()
-        for layer in self.layers:
+        for idx, layer in enumerate(self.layers):
+            print(f"Running layer {idx}")
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
+            if torch.isnan(x).any():
+                print(f"NaNs found after layer {idx}")
+                break
 
         assert not torch.isnan(x).any(), "NaN detected after transformer layers x!"
         x_out = self.final_layer(x, adaln_input)
