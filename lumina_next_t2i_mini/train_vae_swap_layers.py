@@ -23,6 +23,7 @@ from models.nextditmf import NextDiT
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 total_memory = torch.cuda.get_device_properties(device).total_memory
 
+
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
         self.folder = folder
@@ -206,10 +207,14 @@ def main(args):
     logger.info(f"Training for {max_steps:,} steps...")
 
     # Create DataLoader
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=ds_collate_fn,pin_memory=False)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
 
     for step, data in enumerate(dataloader):
         logger.info(f"Step [{step}]")
+
+        logger.info("Empty Cache")
+        torch.cuda.empty_cache()
+
         allocated_memory = torch.cuda.memory_allocated(device)
         reserved_memory = torch.cuda.memory_reserved(device)
         available_memory = total_memory - reserved_memory
@@ -218,7 +223,6 @@ def main(args):
         logger.info(f"Reserved memory: {reserved_memory / 1e9:.2f} GB")
         logger.info(f"Available memory (estimated): {available_memory / 1e9:.2f} GB")
 
-        torch.cuda.empty_cache()
         gc.collect()
 
         images, caps = data
@@ -239,7 +243,7 @@ def main(args):
         opt.zero_grad()
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
         with torch.cuda.amp.autocast(dtype=torch.float16):
-            latent = latent.repeat(2, 1, 1, 1, 1)
+            # latent = latent.repeat(2, 1, 1, 1, 1)
             loss_dict = training_losses(model, latent, latent, model_kwargs)
             loss = loss_dict["loss"].sum()
             loss_item += loss.item()
