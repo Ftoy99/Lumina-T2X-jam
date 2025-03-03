@@ -201,6 +201,8 @@ def main(args, rank, master_port):
 
                 with torch.no_grad():
                     cap_feats, cap_mask = encode_prompt([caps_list] + [""], text_encoder, tokenizer, 0.0)
+                    print(f"cap_feats shape {cap_feats.shape}")
+                    print(f"cap_mask shape {cap_mask.shape}")
 
                 cap_mask = cap_mask.to(cap_feats.device)
 

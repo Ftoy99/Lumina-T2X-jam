@@ -226,6 +226,8 @@ def main(args):
 
         with torch.no_grad():
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
+            print(f"cap_feats shape {cap_feats.shape}")
+            print(f"cap_mask shape {cap_mask.shape}")
 
         loss_item = 0.0
         opt.zero_grad()
