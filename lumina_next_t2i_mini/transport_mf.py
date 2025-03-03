@@ -53,7 +53,6 @@ def training_losses(model, x1, mf1, model_kwargs=None):
     terms = {}
 
     if isinstance(x1, (list, tuple)):
-        print(ut[0] - model_output[0])
         terms["loss"] = th.stack(
             [((ut[i] - model_output[i]) ** 2).mean() for i in range(B)],
             dim=0,
@@ -63,10 +62,8 @@ def training_losses(model, x1, mf1, model_kwargs=None):
             dim=0,
         )
     else:
-        print(model_output)
-        print(ut)
-
-        print((model_output - ut))
+        print(f"output {model_output}")
+        print(f"ut {ut}")
         terms["loss"] = ((model_output - ut) ** 2).mean(dim=list(range(1, ut.ndim)))
         terms["mf_loss"] = ((model_output_mf - mfut) ** 2).mean(dim=list(range(1, mfut.ndim)))
 
