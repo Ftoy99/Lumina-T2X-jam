@@ -499,6 +499,7 @@ class TransformerBlock(nn.Module):
             y_mask: torch.Tensor,
             adaln_input: Optional[torch.Tensor] = None,
     ):
+
         """
         Perform a forward pass through the TransformerBlock.
 

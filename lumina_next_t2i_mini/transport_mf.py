@@ -49,6 +49,8 @@ def training_losses(model, x1, mf1, model_kwargs=None):
         mft = t_ * mf1 + (1 - t_) * mf0
         mfut = mf1 - mf0
 
+    print(f"xt_shape {xt.shape}")
+    print(f"xt_shape {mft.shape}")
     model_output = model(xt, mft, t, **model_kwargs)
 
     terms = {}
