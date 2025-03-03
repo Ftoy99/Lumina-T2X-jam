@@ -161,7 +161,6 @@ def main(args):
         "cpu")
 
     logger.info(f"Quantization vae")
-    vae = torch.quantization.quantize_dynamic(vae, dtype=torch.qint8)
     torch.cuda.empty_cache()
     # Creating model
     logger.info(f"Creating model {dataset_path}")
