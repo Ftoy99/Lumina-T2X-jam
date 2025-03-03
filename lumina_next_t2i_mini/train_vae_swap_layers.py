@@ -117,11 +117,12 @@ def main(args):
     # Load the dataset
     dataset_path = "/mnt/jimmys/dataset_jacky/data"
     logger.info(f"Loading dataset {dataset_path}")
-    dataset = ImageTextDataset()
-
-    logger.info(f"Preprocessing dataset")
-    dataset = prepare_dataset(dataset)
+    dataset = ImageTextDataset(dataset_path)
     logger.info(f"Size of dataset after preprocessing is {len(dataset)}")
+
+    # logger.info(f"Preprocessing dataset")
+    # dataset = prepare_dataset(dataset)
+
 
     # Load the tokenizers
     tokenizer_path = "google/gemma-2b"
