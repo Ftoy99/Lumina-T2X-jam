@@ -245,6 +245,7 @@ def main(args):
         with torch.cuda.amp.autocast(dtype=torch.float16):
             # latent = latent.repeat(2, 1, 1, 1, 1)
             loss_dict = training_losses(model, latent, latent, model_kwargs)
+            logger.info(f"loss dict {loss_dict}")
             loss = loss_dict["loss"].sum()
             loss_item += loss.item()
             logger.info(f"Loss {loss}")
