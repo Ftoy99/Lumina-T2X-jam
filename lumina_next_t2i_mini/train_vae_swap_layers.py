@@ -16,9 +16,11 @@ from safetensors.torch import load_file
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
+from lumina_next_t2i_mini.transport_mf import training_losses
 from models.nextditmf import NextDiT
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
@@ -98,10 +100,6 @@ def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompt
 
         text_input_ids = text_input_ids.to(device)
         prompt_masks = prompt_masks.to(device)
-
-        print(f"text_input_ids device{text_input_ids.device}")
-        print(f"prompt_masks device{prompt_masks.device}")
-        print(f"text_encoder device{text_encoder.device}")
 
         prompt_embeds = text_encoder(
             input_ids=text_input_ids,
@@ -209,9 +207,9 @@ def main(args):
         logger.info(f"Step [{step}]")
         images, caps = data
 
-
         with torch.no_grad():
-            frames_resized = np.array([cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
+            frames_resized = np.array(
+                [cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
             print(f"np array frames shape {frames_resized.shape}")  # np array frames shape (708, 512, 512, 3)
             #  batch_size, num_channels, num_frames, height, width = x.shape
             frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(
@@ -219,11 +217,18 @@ def main(args):
             frames_tensor = frames_tensor.to(torch.float16).to("cuda") / 127.5 - 1  # Normalize
             print(f"frames_tensor shape {frames_tensor.shape}")
             latent = vae.encode(frames_tensor).latent_dist.sample()
-
             logger.info(f"Frames shapes {latent.shape}")
 
         with torch.no_grad():
-            cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3) # EMpty prompts 0.3
+            cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
+
+        loss_item = 0.0
+        opt.zero_grad()
+        model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
+        with torch.cuda.amp.autocast(dtype=torch.float16):
+            loss_dict = training_losses(model, latent, latent, model_kwargs)
+            loss = loss_dict["loss"].sum()
+            loss_item += loss.item()
 
 
 if __name__ == '__main__':

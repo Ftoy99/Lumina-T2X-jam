@@ -2,22 +2,24 @@ import torch as th
 from torchdiffeq import odeint
 
 
-def sample(x1):
+def sample(x1, mf1):
     """Sampling x0 & t based on shape of x1 (if needed)
     Args:
       x1 - data point; [batch, *dim]
     """
     if isinstance(x1, (list, tuple)):
         x0 = [th.randn_like(img_start) for img_start in x1]
+        mf0 = [th.randn_like(img_start) for img_start in mf1]
     else:
         x0 = th.randn_like(x1)
+        mf0 = th.randn_like(mf1)
 
     t = th.rand((len(x1),))
     t = t.to(x1[0])
-    return t, x0, x1
+    return t, x0, x1, mf0, mf1
 
 
-def training_losses(model, x1, model_kwargs=None):
+def training_losses(model, x1, mf1, model_kwargs=None):
     """Loss for training the score model
     Args:
     - model: backbone model; could be score, noise, or velocity
@@ -29,17 +31,25 @@ def training_losses(model, x1, model_kwargs=None):
 
     B = len(x1)
 
-    t, x0, x1 = sample(x1)
+    t, x0, x1, mf0, mf1 = sample(x1, mf1)
+
     if isinstance(x1, (list, tuple)):
         xt = [t[i] * x1[i] + (1 - t[i]) * x0[i] for i in range(B)]
         ut = [x1[i] - x0[i] for i in range(B)]
+
+        mft = [t[i] * mf1[i] + (1 - t[i]) * mf0[i] for i in range(B)]
+        mfut = [mf1[i] - mf0[i] for i in range(B)]
     else:
         dims = [1] * (len(x1.size()) - 1)
         t_ = t.view(t.size(0), *dims)
+
         xt = t_ * x1 + (1 - t_) * x0
         ut = x1 - x0
 
-    model_output = model(xt, t, **model_kwargs)
+        mft = t_ * mf1 + (1 - t_) * mf0
+        mfut = mf1 - mf0
+
+    model_output = model(xt, mft, t, **model_kwargs)
 
     terms = {}
 
@@ -48,8 +58,13 @@ def training_losses(model, x1, model_kwargs=None):
             [((ut[i] - model_output[i]) ** 2).mean() for i in range(B)],
             dim=0,
         )
+        terms["mf_loss"] = th.stack(
+            [((mfut[i] - model_output[i]) ** 2).mean() for i in range(B)],
+            dim=0,
+        )
     else:
         terms["loss"] = ((model_output - ut) ** 2).mean(dim=list(range(1, ut.ndim)))
+        terms["mf_loss"] = ((model_output - mfut) ** 2).mean(dim=list(range(1, mfut.ndim)))
 
     return terms
 
@@ -120,5 +135,4 @@ class ODE:
             # Update the state using the midpoint approximation
             samples_x = samples_x + k2_x * dt
             samples_xmf = samples_xmf + k2_xmf * dt
-        print(f"samples_x shape {samples_x.shape}")
         return samples_x, samples_xmf
