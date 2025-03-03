@@ -205,7 +205,7 @@ def main(args):
     logger.info(f"Training for {max_steps:,} steps...")
 
     # Create DataLoader
-    dataloader = DataLoader(dataset, batch_size=4, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
+    dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
 
     # Create scaler
     scaler = torch.cuda.amp.GradScaler()
