@@ -517,6 +517,8 @@ class TransformerBlock(nn.Module):
                 feedforward layers.
 
         """
+        print(f"[Debug Transformer block] x shape {x.shape}")
+        print(f"[Debug Transformer block] x_mask shape {x_mask.shape}")
         if adaln_input is not None:
             scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
 
