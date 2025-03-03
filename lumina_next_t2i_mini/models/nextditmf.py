@@ -527,15 +527,15 @@ class TransformerBlock(nn.Module):
 
             print(f"Max value before attn: {torch.max(x)}")
             print(f"Min value before attn: {torch.min(x)}")
-            x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
-                self.attention(
-                    modulate(self.attention_norm1(x), scale_msa),
-                    x_mask,
-                    freqs_cis,
-                    self.attention_y_norm(y),
-                    y_mask,
-                )
-            )
+            # x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
+            #     self.attention(
+            #         modulate(self.attention_norm1(x), scale_msa),
+            #         x_mask,
+            #         freqs_cis,
+            #         self.attention_y_norm(y),
+            #         y_mask,
+            #     )
+            # )
             print(f"Max value after attn: {torch.max(x)}")
             print(f"Min value after attn: {torch.min(x)}")
             assert not torch.any(torch.isnan(x)), "NaN detected in x after attention"
