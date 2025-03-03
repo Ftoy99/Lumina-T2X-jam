@@ -191,7 +191,6 @@ def main(args):
     # Model compile and checkpoint
     model.half()
     model = torch.compile(model)
-    model.gradient_checkpointing_enable()
 
     # Optimizer
     logger.info(f"Creating optimizer")
