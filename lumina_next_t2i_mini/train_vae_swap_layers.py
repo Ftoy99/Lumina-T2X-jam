@@ -17,10 +17,11 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from models.nextditmf import NextDiT
 
+
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
         self.folder = folder
-        self.data = []
+        self.file_pairs = []  # Renamed to avoid conflicts
 
         # Find all jpg images and their corresponding json files
         for file in os.listdir(folder):
@@ -28,11 +29,13 @@ class ImageTextDataset(Dataset):
                 img_path = os.path.join(folder, file)
                 json_path = os.path.join(folder, file.replace(".jpg", ".json"))
                 if os.path.exists(json_path):
-                    self.data.append((img_path, json_path))
+                    self.file_pairs.append((img_path, json_path))  # Use new name
+
     def __len__(self):
-        return len(self.data)
+        return len(self.file_pairs)  # Use new name
+
     def __getitem__(self, idx):
-        img_path, json_path = self.data[idx]
+        img_path, json_path = self.file_pairs[idx]  # Use new name
 
         # Load image on demand
         image = Image.open(img_path).convert("RGB")
@@ -43,6 +46,7 @@ class ImageTextDataset(Dataset):
             prompt = metadata.get("prompt", "")
 
         return {"image": image, "prompt": prompt}
+
 
 def create_logger(logging_dir):
     """
