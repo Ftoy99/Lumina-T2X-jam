@@ -223,7 +223,7 @@ def main(args):
             #  batch_size, num_channels, num_frames, height, width = x.shape
             frames_tensor = torch.tensor(frames_resized).permute(3, 0, 1, 2).unsqueeze(
                 0)
-            frames_tensor = frames_tensor.to(torch.float16) / 127.5 - 1  # Normalize
+            frames_tensor = frames_tensor.to(torch.float32) / 127.5 - 1  # Normalize
             latent = vae.encode(frames_tensor).latent_dist.sample()
             latent.to(device)
         with torch.no_grad():
