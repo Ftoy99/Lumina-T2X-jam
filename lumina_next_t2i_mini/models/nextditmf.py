@@ -520,6 +520,7 @@ class TransformerBlock(nn.Module):
         print(f"[Debug Transformer block] x shape {x.shape}")
         print(f"[Debug Transformer block] x_mask shape {x_mask.shape}")
         if adaln_input is not None:
+            print(f"[adaln Transformer block] x_mask shape {x_mask.shape}")
             scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
 
             x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
@@ -538,6 +539,7 @@ class TransformerBlock(nn.Module):
             )
 
         else:
+            print(f"[not adaln Transformer block] x_mask shape {x_mask.shape}")
             x = x + self.attention_norm2(
                 self.attention(
                     self.attention_norm1(x),
