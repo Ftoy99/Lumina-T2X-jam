@@ -188,7 +188,7 @@ def main(args):
 
     # Model compile and checkpoint
     model.half()
-    model = torch.compile(model, mode="reduce-overhead")
+    # model = torch.compile(model, mode="reduce-overhead")
 
     # Optimizer
     logger.info(f"Creating optimizer")
