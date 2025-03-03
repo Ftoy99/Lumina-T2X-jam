@@ -236,7 +236,7 @@ def main(args):
             frames_tensor = frames_tensor.to(torch.float16).to(device) / 127.5 - 1  # Normalize
             latent = vae.encode(frames_tensor).latent_dist.sample()
             assert not torch.isnan(latent).any(), "NaN detected in latent!"
-            latent.to(device)
+            latent = latent.to(device)
         with torch.no_grad():
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
 
@@ -245,6 +245,7 @@ def main(args):
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
         with torch.cuda.amp.autocast(dtype=torch.float16,enabled=False):
             # latent = latent.repeat(2, 1, 1, 1, 1)
+            latent = latent.float()
             loss_dict = training_losses(model, latent, latent, model_kwargs)
             logger.info(f"loss dict {loss_dict}")
             loss = loss_dict["loss"].sum()
