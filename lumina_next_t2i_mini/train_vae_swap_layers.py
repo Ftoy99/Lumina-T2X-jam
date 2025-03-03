@@ -235,6 +235,7 @@ def main(args):
                 0)
             frames_tensor = frames_tensor.to(torch.float16).to(device) / 127.5 - 1  # Normalize
             latent = vae.encode(frames_tensor).latent_dist.sample()
+            assert not torch.isnan(latent).any(), "NaN detected in latent!"
             latent.to(device)
         with torch.no_grad():
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
