@@ -201,8 +201,8 @@ def main(args):
     for step, data in enumerate(dataloader):
         logger.info(f"Step [{step}]")
         images, caps = data
+        caps=[torch.tensor(cap).to(device) for cap in caps]
 
-        torch.tensor(caps).to(device)
 
         with torch.no_grad():
             frames_resized = np.array([cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
