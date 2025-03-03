@@ -107,7 +107,7 @@ def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompt
             attention_mask=prompt_masks,
             output_hidden_states=True,
         ).hidden_states[-2]
-    prompt_embeds = text_input_ids.to(device)
+    prompt_embeds = prompt_embeds.to(device)
     prompt_masks = prompt_masks.to(device)
     return prompt_embeds, prompt_masks
 
