@@ -132,7 +132,7 @@ def main(args):
     # Load the tokenizers
     tokenizer_path = "google/gemma-2b"
     logger.info(f"Loading tokenizer {tokenizer_path}")
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path).to(device)
     tokenizer.padding_side = "right"
 
     # Load the encoder
@@ -201,7 +201,6 @@ def main(args):
     for step, data in enumerate(dataloader):
         logger.info(f"Step [{step}]")
         images, caps = data
-        caps=[torch.tensor(cap).to(device) for cap in caps]
 
 
         with torch.no_grad():
