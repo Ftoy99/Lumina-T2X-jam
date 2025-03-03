@@ -48,7 +48,7 @@ def training_losses(model, x1, mf1, model_kwargs=None):
 
         mft = t_ * mf1 + (1 - t_) * mf0
         mfut = mf1 - mf0
-    model_output = model(xt, mft, t, **model_kwargs)
+    model_output,model_output_mf = model(xt, mft, t, **model_kwargs)
 
     terms = {}
 
@@ -63,7 +63,7 @@ def training_losses(model, x1, mf1, model_kwargs=None):
         )
     else:
         terms["loss"] = ((model_output - ut) ** 2).mean(dim=list(range(1, ut.ndim)))
-        terms["mf_loss"] = ((model_output - mfut) ** 2).mean(dim=list(range(1, mfut.ndim)))
+        terms["mf_loss"] = ((model_output_mf - mfut) ** 2).mean(dim=list(range(1, mfut.ndim)))
 
     return terms
 
