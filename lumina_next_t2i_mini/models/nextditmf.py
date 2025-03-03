@@ -848,10 +848,12 @@ class NextDiT(nn.Module):
         assert not torch.isnan(xmf).any(), "NaN detected after vae_in xmf!"
 
         x_is_tensor = isinstance(x, torch.Tensor)
+
         x = torch.concat((x, xmf), 1)
+
+        assert not torch.isnan(x).any(), "NaN detected before patchify x!"
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
-        # print(f"Patchify x Shape {x.shape}")
-        # print(f"Patchify mask Shape {mask.shape}")
+        assert not torch.isnan(x).any(), "NaN detected after patchify x!"
 
         freqs_cis = freqs_cis.to(x.device)
 
