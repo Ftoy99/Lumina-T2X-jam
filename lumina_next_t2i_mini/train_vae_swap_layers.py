@@ -240,11 +240,16 @@ def main(args):
         loss_item = 0.0
         opt.zero_grad()
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
+        scaler = torch.cuda.amp.GradScaler()
         with torch.cuda.amp.autocast(dtype=torch.float32):
             # latent = latent.repeat(2, 1, 1, 1, 1)
             loss_dict = training_losses(model, latent, latent, model_kwargs)
             logger.info(f"loss dict {loss_dict}")
             loss = loss_dict["loss"].sum()
+            # Scale the loss before backpropagation
+            scaler.scale(loss).backward()
+            scaler.step(opt)
+            scaler.update()  # Update the scaler
             loss_item += loss.item()
             logger.info(f"Loss {loss}")
 
