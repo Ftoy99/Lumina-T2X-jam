@@ -871,7 +871,7 @@ class NextDiT(nn.Module):
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
 
-        frames_size = 2
+        frames_size = 1
         x_out = self.unpatchify(x_out, img_size, frames_size, return_tensor=x_is_tensor)
         xmf_out = self.unpatchify(xmf_out, img_size, frames_size, return_tensor=x_is_tensor)
 
