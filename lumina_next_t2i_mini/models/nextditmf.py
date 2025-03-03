@@ -527,7 +527,7 @@ class TransformerBlock(nn.Module):
             assert not torch.any(torch.isnan(x)), "NaN detected in x before attention"
 
             print(f"Max value scale_msa: {torch.max(scale_msa)}")
-            print(f"Min value before attn: {torch.min(scale_msa)}")
+            print(f"Min value scale_msa: {torch.min(scale_msa)}")
 
             print(f"Max value scale_mlp: {torch.max(scale_mlp)}")
             print(f"Min value scale_mlp: {torch.min(scale_mlp)}")
@@ -548,6 +548,7 @@ class TransformerBlock(nn.Module):
             modulated = modulate(self.ffn_norm1(x), scale_mlp)
             print(f"Max value after modulate: {torch.max(modulated)}")
             print(f"Min value after modulate: {torch.min(modulated)}")
+            modulated = torch.clamp(modulated, min=-5, max=5)
             assert not torch.any(torch.isnan(modulated)), "NaN detected in modulated after modulate"
 
             ff = self.feed_forward(
