@@ -45,7 +45,7 @@ class ImageTextDataset(Dataset):
             metadata = json.load(f)
             prompt = metadata.get("prompt", "")
 
-        items.append({"image": image, "prompt": prompt})
+        return {"image": image, "prompt": prompt}
 
 
 def create_logger(logging_dir):
