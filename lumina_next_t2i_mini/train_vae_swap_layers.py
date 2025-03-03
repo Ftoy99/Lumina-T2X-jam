@@ -21,7 +21,7 @@ from models.nextditmf import NextDiT
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
         self.folder = folder
-        self.file_pairs = []  # Renamed to avoid conflicts
+        self.file_pairs = []
 
         # Find all jpg images and their corresponding json files
         for file in os.listdir(folder):
@@ -29,13 +29,14 @@ class ImageTextDataset(Dataset):
                 img_path = os.path.join(folder, file)
                 json_path = os.path.join(folder, file.replace(".jpg", ".json"))
                 if os.path.exists(json_path):
-                    self.file_pairs.append((img_path, json_path))  # Use new name
+                    self.file_pairs.append((img_path, json_path))
 
     def __len__(self):
-        return len(self.file_pairs)  # Use new name
+        return len(self.file_pairs)
 
     def __getitem__(self, idx):
-        img_path, json_path = self.file_pairs[idx]  # Use new name
+        print(idx)
+        img_path, json_path = self.file_pairs[idx]
 
         # Load image on demand
         image = Image.open(img_path).convert("RGB")
