@@ -9,7 +9,7 @@ from time import time
 import numpy as np
 import torch
 from PIL import Image
-
+import cv2
 from diffusers import AutoencoderKLCogVideoX
 from safetensors.torch import load_file
 from torch.utils.data import DataLoader, Dataset
