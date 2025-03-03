@@ -151,7 +151,7 @@ def main(args):
             torch_dtype=torch.bfloat16,
         )
         .get_decoder()
-        .cuda()
+        .cpu()
     )
     cap_feat_dim = text_encoder.config.hidden_size
 
