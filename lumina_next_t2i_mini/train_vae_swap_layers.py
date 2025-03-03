@@ -35,20 +35,20 @@ class ImageTextDataset(Dataset):
         return len(self.file_pairs)
 
     def __getitem__(self, idx):
-        items = []
-        for id in idx:
-            img_path, json_path = self.file_pairs[id]
+        if isinstance(idx, list):
+            raise TypeError("Dataset does not support batch indexing. Use collate_fn in DataLoader.")
 
-            # Load image on demand
-            image = Image.open(img_path).convert("RGB")
+        img_path, json_path = self.file_pairs[idx]
 
-            # Load JSON on demand
-            with open(json_path, "r") as f:
-                metadata = json.load(f)
-                prompt = metadata.get("prompt", "")
+        # Load image
+        image = Image.open(img_path).convert("RGB")
 
-            items.append({"image": image, "prompt": prompt})
-        return items
+        # Load JSON
+        with open(json_path, "r") as f:
+            metadata = json.load(f)
+            prompt = metadata.get("prompt", "")
+
+        return {"image": image, "prompt": prompt}  # Return single item
 
 
 def create_logger(logging_dir):
