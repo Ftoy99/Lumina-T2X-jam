@@ -63,8 +63,6 @@ def training_losses(model, x1, mf1, model_kwargs=None):
             dim=0,
         )
     else:
-        print(f"output {model_output}")
-        print(f"ut {ut}")
         terms["loss"] = ((model_output - ut) ** 2).mean(dim=list(range(1, ut.ndim)))
         terms["mf_loss"] = ((model_output_mf - mfut) ** 2).mean(dim=list(range(1, mfut.ndim)))
 
@@ -101,7 +99,6 @@ class ODE:
 
     def sample(self, x, xmf, model, **model_kwargs):
         device = x[0].device if isinstance(x, tuple) else x.device
-        print("in ode sample")
 
         def _fn(t, x, xmf):
             t = th.ones(x[0].size(0)).to(device) * t if isinstance(x, tuple) else th.ones(x.size(0)).to(device) * t
