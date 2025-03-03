@@ -99,6 +99,10 @@ def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompt
         text_input_ids.to(device)
         prompt_masks.to(device)
 
+        print(f"text_input_ids device{text_input_ids.device}")
+        print(f"prompt_masks device{prompt_masks.device}")
+        print(f"text_encoder device{text_encoder.device}")
+
         prompt_embeds = text_encoder(
             input_ids=text_input_ids,
             attention_mask=prompt_masks,
