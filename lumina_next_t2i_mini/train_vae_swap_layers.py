@@ -238,7 +238,7 @@ def main(args):
         with torch.no_grad():
             latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
             assert not torch.isnan(latent).any(), "NaN detected in latent!"
-            latent = latent.to(device)
+            latent = latent.to(device).contiguous()
 
         del frames_tensor
         torch.cuda.empty_cache()
@@ -248,7 +248,7 @@ def main(args):
             cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
 
         loss_item = 0.0
-        model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
+        model_kwargs = dict(cap_feats=cap_feats.contiguous(), cap_mask=cap_mask.contiguous())
 
         # Forward pass
         with torch.cuda.amp.autocast(dtype=torch.float32):
