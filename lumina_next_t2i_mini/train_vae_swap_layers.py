@@ -132,7 +132,7 @@ def main(args):
     # Load the tokenizers
     tokenizer_path = "google/gemma-2b"
     logger.info(f"Loading tokenizer {tokenizer_path}")
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path).to(device)
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     tokenizer.padding_side = "right"
 
     # Load the encoder
