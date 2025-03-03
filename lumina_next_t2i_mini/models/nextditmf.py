@@ -826,6 +826,8 @@ class NextDiT(nn.Module):
             return x_embed, mask, img_size, freqs_cis
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
+        print(f"x SHHAPE {x.shape}")
+        print(f"xmf SHHAPE {xmf.shape}")
         """
         Forward pass of NextDiT.
         t: (N,) tensor of diffusion timesteps
