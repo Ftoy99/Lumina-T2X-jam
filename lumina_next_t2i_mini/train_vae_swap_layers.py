@@ -250,6 +250,11 @@ def main(args):
         loss_item = 0.0
         model_kwargs = dict(cap_feats=cap_feats.contiguous(), cap_mask=cap_mask.contiguous())
 
+        #For torch compile speed up
+        latent = latent.contiguous()
+        cap_feats = cap_feats.contiguous()
+        cap_mask = cap_mask.contiguous()
+
         # Forward pass
         with torch.cuda.amp.autocast(dtype=torch.float32):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
