@@ -16,7 +16,7 @@ from safetensors.torch import load_file
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from lumina_next_t2i_mini.transport_mf import training_losses
+from transport_mf import training_losses
 from models.nextditmf import NextDiT
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
