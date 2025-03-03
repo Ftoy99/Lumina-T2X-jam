@@ -122,6 +122,8 @@ def prepare_dataset(dataset):
 
 
 def main(args):
+    torch.cuda.set_device(device)
+
     # Create logger
     logger = create_logger("logs")
 
@@ -161,6 +163,7 @@ def main(args):
     logger.info(f"Creating model {dataset_path}")
     model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
     model.half()
+    torch.cuda.synchronize()
 
     logger.info(f"Loading model model {dataset_path}")
     if args.first_run:
