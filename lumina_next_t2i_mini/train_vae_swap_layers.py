@@ -18,6 +18,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from models.nextditmf import NextDiT
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
@@ -201,6 +202,8 @@ def main(args):
         logger.info(f"Step [{step}]")
         images, caps = data
 
+        torch.tensor(caps).to(device)
+
         with torch.no_grad():
             frames_resized = np.array([cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
             print(f"np array frames shape {frames_resized.shape}")  # np array frames shape (708, 512, 512, 3)
@@ -214,7 +217,7 @@ def main(args):
             logger.info(f"Frames shapes {latent.shape}")
 
         with torch.no_grad():
-            cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)
+            cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3) # EMpty prompts 0.3
 
 
 if __name__ == '__main__':
