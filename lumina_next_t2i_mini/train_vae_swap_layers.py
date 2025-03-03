@@ -245,7 +245,7 @@ def main(args):
         model_kwargs = dict(cap_feats=cap_feats, cap_mask=cap_mask)
 
         # Forward pass
-        with torch.cuda.amp.autocast(dtype=torch.float16):
+        with torch.cuda.amp.autocast(dtype=torch.float32):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
 
         loss = loss_dict["loss"].sum()
