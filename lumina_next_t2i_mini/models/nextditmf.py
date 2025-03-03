@@ -843,7 +843,6 @@ class NextDiT(nn.Module):
 
         x_is_tensor = isinstance(x, torch.Tensor)
         x = torch.concat((x, xmf), 1)
-
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
         print(f"Patchify x Shape {x.shape}")
         print(f"Patchify mask Shape {mask.shape}")
