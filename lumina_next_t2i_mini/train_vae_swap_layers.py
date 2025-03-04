@@ -164,7 +164,8 @@ def main(args):
     torch.cuda.empty_cache()
     # Creating model
     logger.info(f"Creating model {dataset_path}")
-    model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
+    model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim,
+                    qk_norm=True)
     model.to(device)
     torch.cuda.synchronize()
 
@@ -254,7 +255,7 @@ def main(args):
         frames_tensor = frames_tensor.to(dtype=torch.float16, non_blocking=True) / 127.5 - 1  # Normalize
 
         with torch.no_grad():
-            frames_tensor = frames_tensor.to(dtype=torch.float16,device="cuda")
+            frames_tensor = frames_tensor.to(dtype=torch.float16, device="cuda")
             latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
             assert not torch.isnan(latent).any(), "NaN detected in latent!"
             latent = latent.to(device)
@@ -290,8 +291,7 @@ def main(args):
         if (step + 1) % 200 == 0:
             save_file(model.state_dict(), f'custom_ckpt/1.safetensors')
             logger.info(f"State dict keys: {list(model.state_dict().keys())}")  # Print all keys
-            logger.info(f"Saved model checkpoint at steps {step+1}")
-
+            logger.info(f"Saved model checkpoint at steps {step + 1}")
 
 
 if __name__ == '__main__':
