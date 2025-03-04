@@ -123,7 +123,6 @@ def main(args, rank, master_port):
 
     model.eval().to("cuda", dtype=dtype)
 
-
     sample_folder_dir = args.image_save_path
 
     if rank == 0:

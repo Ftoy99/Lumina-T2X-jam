@@ -184,15 +184,11 @@ def main(args):
             model.x_cat_emb.weight[:, motion_dim_start:].zero_()
     else:
         ckpt = load_file(
-            f"custom_ckpt/vae_trained_layers.safetensors",
+            f"custom_ckpt/1.safetensors",
         )
-    model.load_state_dict(ckpt, strict=False)
+    model.load_state_dict(ckpt, strict=True)
 
     # TODO Remove some layers for memory
-    # model.layers = model.layers[:-6]
-
-    # Model compile and checkpoint
-    # model.half()
 
     # Optimizer
     logger.info(f"Creating optimizer")
