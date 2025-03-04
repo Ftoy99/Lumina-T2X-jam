@@ -9,7 +9,7 @@ cfg=4.0
 seed=69
 steps=20
 solver=euler
-model_dir=custom_ckpt
+model_dir=Lumina-Next-SFT
 cap_dir=captions.txt
 out_dir=output
 python3 -u sample_mf_vae.py --ckpt ${model_dir} \
