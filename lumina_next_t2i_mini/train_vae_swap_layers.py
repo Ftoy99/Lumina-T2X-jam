@@ -257,17 +257,19 @@ def main(args):
         # Forward pass
         with torch.cuda.amp.autocast(dtype=torch.float32):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
+
+        opt.zero_grad()  # Zero gradients before backpropagation
         loss = loss_dict["loss"].sum()
-        scaler.scale(loss).backward()
-        opt.zero_grad()
+
+        scaler.scale(loss).backward()  # Scale loss and backpropagate
 
         logger.info(f"Loss is {loss} for step {step}")
 
         if (step + 1) % accumulation_steps == 0:
             logger.info("Stepping optimizer")
-            scaler.step(opt)
-            scaler.update()
-            opt.zero_grad()
+            scaler.step(opt)  # Step the optimizer with scaled gradients
+            scaler.update()  # Update scaler after optimizer step
+            opt.zero_grad()  # Zero gradients for next iteration
 
         loss_item += loss.item()
         logger.info(f"Loss is {loss} for step {step}")
