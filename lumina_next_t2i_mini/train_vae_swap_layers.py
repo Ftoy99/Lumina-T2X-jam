@@ -219,10 +219,10 @@ def main(args):
     max_steps = 100
     logger.info(f"Training for {max_steps:,} steps...")
 
-    accumulation_steps = 5
+    accumulation_steps = 50
 
     # Create DataLoader
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
+    dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
 
     # Create scaler
     scaler = torch.cuda.amp.GradScaler()
@@ -273,11 +273,8 @@ def main(args):
         with torch.cuda.amp.autocast(dtype=torch.float32):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
 
-        opt.zero_grad()  # Zero gradients before backpropagation
         loss = loss_dict["loss"].sum()
-
         scaler.scale(loss).backward()  # Scale loss and backpropagate
-
         logger.info(f"Loss is {loss} for step {step}")
 
         if (step + 1) % accumulation_steps == 0:
@@ -289,6 +286,8 @@ def main(args):
 
         loss_item += loss.item()
         logger.info(f"Loss is {loss} for step {step}")
+
+        if step==max_steps
 
 
 if __name__ == '__main__':
