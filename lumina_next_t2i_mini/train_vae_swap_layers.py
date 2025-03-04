@@ -159,7 +159,7 @@ def main(args):
 
     # Load vae
     logger.info(f"Creating vae {dataset_path}")
-    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
+    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float32).to(
         "cpu")
     torch.cuda.empty_cache()
     # Creating model
