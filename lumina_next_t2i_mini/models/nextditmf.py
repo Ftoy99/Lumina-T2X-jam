@@ -520,17 +520,7 @@ class TransformerBlock(nn.Module):
         # print(f"[Debug Transformer block] x shape {x.shape}")
         # print(f"[Debug Transformer block] x_mask shape {x_mask.shape}")
         if adaln_input is not None:
-            # print(f"[adaln Transformer block] x_mask shape {x_mask.shape}")
-            # print(f"[adaln Transformer block] x_mask shape {x.shape}")
-            assert not torch.any(torch.isnan(adaln_input)), "NaN detected in adaln_input before attention"
             scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
-            assert not torch.any(torch.isnan(x)), "NaN detected in x before attention"
-
-            # print(f"Max value scale_msa: {torch.max(scale_msa)}")
-            # print(f"Min value scale_msa: {torch.min(scale_msa)}")
-            #
-            # print(f"Max value scale_mlp: {torch.max(scale_mlp)}")
-            # print(f"Min value scale_mlp: {torch.min(scale_mlp)}")
 
             x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
                 self.attention(
@@ -541,37 +531,12 @@ class TransformerBlock(nn.Module):
                     y_mask,
                 )
             )
-            # print(f"Max value after attn: {torch.max(x)}")
-            # print(f"Min value after attn: {torch.min(x)}")
-            assert not torch.any(torch.isnan(x)), "NaN detected in x after attention"
-
-            modulated = modulate(self.ffn_norm1(x), scale_mlp)
-            # print(f"Max value after modulate: {torch.max(modulated)}")
-            # print(f"Min value after modulate: {torch.min(modulated)}")
-
-            assert not torch.any(torch.isnan(modulated)), "NaN detected in modulated after modulate"
-
-            ff = self.feed_forward(
-                    modulated,
+            x = x + gate_mlp.unsqueeze(1).tanh() * self.ffn_norm2(
+                self.feed_forward(
+                    modulate(self.ffn_norm1(x), scale_mlp),
                 )
-
-            # print(f"Max value after ff: {torch.max(ff)}")
-            # print(f"Min value after ff: {torch.min(ff)}")
-            ff_norm = self.ffn_norm2(
-                ff
             )
-            # print(f"Max value after ff_norm: {torch.max(ff_norm)}")
-            # print(f"Min value after ff_norm: {torch.min(ff_norm)}")
 
-            gate_mlp = gate_mlp.unsqueeze(1).tanh() * ff_norm
-
-            # print(f"Max value after ff_gate: {torch.max(gate_mlp)}")
-            # print(f"Min value after ff_gate: {torch.min(gate_mlp)}")
-
-            x = x + gate_mlp
-            # print(f"Max value after ff total: {torch.max(x)}")
-            # print(f"Min value after ff total: {torch.min(x)}")
-            assert not torch.any(torch.isnan(x)), "NaN detected in x after feed_forward"
         else:
             x = x + self.attention_norm2(
                 self.attention(
