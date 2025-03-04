@@ -190,13 +190,17 @@ def main(args):
     # TODO Remove some layers for memory
     model.layers = model.layers[:-6]
 
-
     # Model compile and checkpoint
     # model.half()
 
     # Optimizer
     logger.info(f"Creating optimizer")
-    opt = torch.optim.AdamW(model.parameters(), lr=1e-4)
+    # Train only vae conv layers
+    parameters_to_train = {
+        {'params': model.vae_out.parameters(), 'lr': 1e-4},
+        {'params': model.vae_in.parameters(), 'lr': 1e-4},
+    }
+    opt = torch.optim.AdamW(parameters_to_train, lr=1e-4)
 
     logger.info("Setting model to training")
     model.train()
