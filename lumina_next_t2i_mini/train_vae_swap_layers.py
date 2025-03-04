@@ -267,8 +267,9 @@ def main(args):
 
         if (step + 1) % accumulation_steps == 0:
             logger.info("Stepping optimizer")
-            scaler.step(opt)  # Step the optimizer with scaled gradients
-            scaler.update()  # Update scaler after optimizer step
+            scaler.unscale_(opt)  # Unscale gradients to FP32
+            scaler.step(opt)  # Step the optimizer with FP32 gradients
+            scaler.update()  # Update the scaler after the optimizer step
             opt.zero_grad()  # Zero gradients for next iteration
 
         loss_item += loss.item()
