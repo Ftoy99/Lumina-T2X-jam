@@ -286,7 +286,6 @@ def main(args):
             opt.zero_grad()  # Zero gradients for next iteration
 
         loss_item += loss.item()
-        logger.info(f"Loss is {loss} for step {step}")
         # Save the model every 200 steps (or adjust as needed)
         if (step + 1) % 200 == 0:
             save_file(model.state_dict(), f'custom_ckpt/vae_trained_layers.safetensors')

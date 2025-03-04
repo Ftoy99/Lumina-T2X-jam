@@ -12,7 +12,7 @@ solver=euler
 model_dir=Lumina-Next-SFT
 cap_dir=captions.txt
 out_dir=output
-python3 -u sample_mf.py --ckpt ${model_dir} \
+python3 -u sample_mf_vae.py --ckpt ${model_dir} \
 --image_save_path ${out_dir} \
 --solver ${solver} --num_sampling_steps ${steps} \
 --caption_path ${cap_dir} \
