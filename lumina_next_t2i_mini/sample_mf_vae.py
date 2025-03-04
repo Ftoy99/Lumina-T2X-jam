@@ -125,7 +125,7 @@ def main(args, rank, master_port):
         ckpt = load_file(
             os.path.join(
                 args.ckpt,
-                f"custom_ckpt/vae_trained_layers.safetensors",
+                f"vae_trained_layers.safetensors",
             )
         )
         model.load_state_dict(ckpt, strict=False)
