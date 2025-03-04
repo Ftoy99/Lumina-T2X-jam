@@ -858,7 +858,6 @@ class NextDiT(nn.Module):
 
         cap_mask = cap_mask.bool()
         for idx, layer in enumerate(self.layers):
-            print(f"Running layer {idx}")
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
             if torch.isnan(x).any():
                 print(f"NaNs found after layer {idx}")
