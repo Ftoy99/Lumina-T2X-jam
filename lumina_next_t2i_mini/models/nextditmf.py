@@ -319,10 +319,15 @@ class Attention(nn.Module):
 
         xq, xk = xq.to(dtype), xk.to(dtype)
 
-
-        softmax_scale = math.sqrt(1 / self.head_dim)
+        if self.proportional_attn:
+            softmax_scale = math.sqrt(math.log(seqlen, self.base_seqlen) / self.head_dim)
+        else:
+            softmax_scale = math.sqrt(1 / self.head_dim)
 
         n_rep = self.n_local_heads // self.n_local_kv_heads
+        if n_rep >= 1:
+            xk = xk.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
+            xv = xv.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
         # print(f"[Attention Debug] x {x.shape}")
         # print(f"[Attention Debug] x_mask {x_mask.shape}")
         # print(f"[Attention Debug] bsz {bsz}")
@@ -340,21 +345,21 @@ class Attention(nn.Module):
             .to(dtype)
         )
 
-
-        yk = self.ky_norm(self.wk_y(y)).view(bsz, -1, self.n_local_kv_heads, self.head_dim)
-        yv = self.wv_y(y).view(bsz, -1, self.n_local_kv_heads, self.head_dim)
-        n_rep = self.n_local_heads // self.n_local_kv_heads
-        if n_rep >= 1:
-            yk = yk.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
-            yv = yv.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
-        output_y = F.scaled_dot_product_attention(
-            xq.permute(0, 2, 1, 3),
-            yk.permute(0, 2, 1, 3),
-            yv.permute(0, 2, 1, 3),
-            y_mask.view(bsz, 1, 1, -1).expand(bsz, self.n_local_heads, seqlen, -1),
-        ).permute(0, 2, 1, 3)
-        output_y = output_y * self.gate.tanh().view(1, 1, -1, 1)
-        output = output + output_y
+        if hasattr(self, "wk_y"):
+            yk = self.ky_norm(self.wk_y(y)).view(bsz, -1, self.n_local_kv_heads, self.head_dim)
+            yv = self.wv_y(y).view(bsz, -1, self.n_local_kv_heads, self.head_dim)
+            n_rep = self.n_local_heads // self.n_local_kv_heads
+            if n_rep >= 1:
+                yk = yk.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
+                yv = yv.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
+            output_y = F.scaled_dot_product_attention(
+                xq.permute(0, 2, 1, 3),
+                yk.permute(0, 2, 1, 3),
+                yv.permute(0, 2, 1, 3),
+                y_mask.view(bsz, 1, 1, -1).expand(bsz, self.n_local_heads, seqlen, -1),
+            ).permute(0, 2, 1, 3)
+            output_y = output_y * self.gate.tanh().view(1, 1, -1, 1)
+            output = output + output_y
 
         output = output.flatten(-2)
 
@@ -514,59 +519,70 @@ class TransformerBlock(nn.Module):
         """
         # print(f"[Debug Transformer block] x shape {x.shape}")
         # print(f"[Debug Transformer block] x_mask shape {x_mask.shape}")
+        if adaln_input is not None:
+            # print(f"[adaln Transformer block] x_mask shape {x_mask.shape}")
+            # print(f"[adaln Transformer block] x_mask shape {x.shape}")
+            assert not torch.any(torch.isnan(adaln_input)), "NaN detected in adaln_input before attention"
+            scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
+            assert not torch.any(torch.isnan(x)), "NaN detected in x before attention"
 
-        # print(f"[adaln Transformer block] x_mask shape {x_mask.shape}")
-        # print(f"[adaln Transformer block] x_mask shape {x.shape}")
-        assert not torch.any(torch.isnan(adaln_input)), "NaN detected in adaln_input before attention"
-        scale_msa, gate_msa, scale_mlp, gate_mlp = self.adaLN_modulation(adaln_input).chunk(4, dim=1)
-        assert not torch.any(torch.isnan(x)), "NaN detected in x before attention"
+            # print(f"Max value scale_msa: {torch.max(scale_msa)}")
+            # print(f"Min value scale_msa: {torch.min(scale_msa)}")
+            #
+            # print(f"Max value scale_mlp: {torch.max(scale_mlp)}")
+            # print(f"Min value scale_mlp: {torch.min(scale_mlp)}")
 
-        # print(f"Max value scale_msa: {torch.max(scale_msa)}")
-        # print(f"Min value scale_msa: {torch.min(scale_msa)}")
-        #
-        # print(f"Max value scale_mlp: {torch.max(scale_mlp)}")
-        # print(f"Min value scale_mlp: {torch.min(scale_mlp)}")
-
-        x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
-            self.attention(
-                modulate(self.attention_norm1(x), scale_msa),
-                x_mask,
-                freqs_cis,
-                self.attention_y_norm(y),
-                y_mask,
+            x = x + gate_msa.unsqueeze(1).tanh() * self.attention_norm2(
+                self.attention(
+                    modulate(self.attention_norm1(x), scale_msa),
+                    x_mask,
+                    freqs_cis,
+                    self.attention_y_norm(y),
+                    y_mask,
+                )
             )
-        )
-        # print(f"Max value after attn: {torch.max(x)}")
-        # print(f"Min value after attn: {torch.min(x)}")
-        assert not torch.any(torch.isnan(x)), "NaN detected in x after attention"
+            # print(f"Max value after attn: {torch.max(x)}")
+            # print(f"Min value after attn: {torch.min(x)}")
+            assert not torch.any(torch.isnan(x)), "NaN detected in x after attention"
 
-        modulated = modulate(self.ffn_norm1(x), scale_mlp)
-        # print(f"Max value after modulate: {torch.max(modulated)}")
-        # print(f"Min value after modulate: {torch.min(modulated)}")
+            modulated = modulate(self.ffn_norm1(x), scale_mlp)
+            # print(f"Max value after modulate: {torch.max(modulated)}")
+            # print(f"Min value after modulate: {torch.min(modulated)}")
 
-        assert not torch.any(torch.isnan(modulated)), "NaN detected in modulated after modulate"
+            assert not torch.any(torch.isnan(modulated)), "NaN detected in modulated after modulate"
 
-        ff = self.feed_forward(
-                modulated,
+            ff = self.feed_forward(
+                    modulated,
+                )
+
+            # print(f"Max value after ff: {torch.max(ff)}")
+            # print(f"Min value after ff: {torch.min(ff)}")
+            ff_norm = self.ffn_norm2(
+                ff
             )
+            # print(f"Max value after ff_norm: {torch.max(ff_norm)}")
+            # print(f"Min value after ff_norm: {torch.min(ff_norm)}")
 
-        # print(f"Max value after ff: {torch.max(ff)}")
-        # print(f"Min value after ff: {torch.min(ff)}")
-        ff_norm = self.ffn_norm2(
-            ff
-        )
-        # print(f"Max value after ff_norm: {torch.max(ff_norm)}")
-        # print(f"Min value after ff_norm: {torch.min(ff_norm)}")
+            gate_mlp = gate_mlp.unsqueeze(1).tanh() * ff_norm
 
-        gate_mlp = gate_mlp.unsqueeze(1).tanh() * ff_norm
+            # print(f"Max value after ff_gate: {torch.max(gate_mlp)}")
+            # print(f"Min value after ff_gate: {torch.min(gate_mlp)}")
 
-        # print(f"Max value after ff_gate: {torch.max(gate_mlp)}")
-        # print(f"Min value after ff_gate: {torch.min(gate_mlp)}")
-
-        x = x + gate_mlp
-        # print(f"Max value after ff total: {torch.max(x)}")
-        # print(f"Min value after ff total: {torch.min(x)}")
-        assert not torch.any(torch.isnan(x)), "NaN detected in x after feed_forward"
+            x = x + gate_mlp
+            # print(f"Max value after ff total: {torch.max(x)}")
+            # print(f"Min value after ff total: {torch.min(x)}")
+            assert not torch.any(torch.isnan(x)), "NaN detected in x after feed_forward"
+        else:
+            x = x + self.attention_norm2(
+                self.attention(
+                    self.attention_norm1(x),
+                    x_mask,
+                    freqs_cis,
+                    self.attention_y_norm(y),
+                    y_mask,
+                )
+            )
+            x = x + self.ffn_norm2(self.feed_forward(self.ffn_norm1(x)))
 
         return x
 
