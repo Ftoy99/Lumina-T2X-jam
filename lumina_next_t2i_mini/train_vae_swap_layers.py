@@ -23,6 +23,7 @@ total_memory = torch.cuda.get_device_properties(device).total_memory
 vae_scale = 0.13025
 torch.set_float32_matmul_precision('high')
 
+
 class ImageTextDataset(Dataset):
     def __init__(self, folder):
         self.folder = folder
@@ -188,7 +189,7 @@ def main(args):
 
     # Model compile and checkpoint
     model.half()
-    # model = torch.compile(model, mode="reduce-overhead")
+    model = torch.compile(model, mode="reduce-overhead", backend="nvfuser", dynamic=False)
 
     # Optimizer
     logger.info(f"Creating optimizer")
