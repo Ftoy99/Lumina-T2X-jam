@@ -216,10 +216,9 @@ def main(args):
     logger.info("Setting model to training")
     model.train()
 
-    max_epochs = 10
-    logger.info(f"Training for {max_steps:,} steps...")
-
+    max_steps = 50000
     accumulation_steps = 32
+    logger.info(f"Training for {max_steps} steps of 32")
 
     # Create DataLoader
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
@@ -228,70 +227,71 @@ def main(args):
     scaler = torch.cuda.amp.GradScaler()
 
     # Training loop
-    for epoch in range(max_epochs):  # Loop through epochs
-        logger.info(f"Epoch {epoch + 1}/{max_epochs}")
-        for step, data in enumerate(dataloader):
-            if step >= accumulation_steps:
-                break  # Exit the inner loop if we've reached the steps per epoch
-            # Logging
-            logger.info(f"Step [{step}]")
+    for step, data in enumerate(dataloader):
+        if step >= max_steps:
+            break  # Exit the inner loop if we've reached the steps per epoch
+        # Logging
+        logger.info(f"Step [{step}]")
 
-            logger.info("Empty Cache")
-            torch.cuda.empty_cache()
-            gc.collect()
+        logger.info("Empty Cache")
+        torch.cuda.empty_cache()
+        gc.collect()
 
-            allocated_memory = torch.cuda.memory_allocated(device)
-            reserved_memory = torch.cuda.memory_reserved(device)
-            available_memory = total_memory - reserved_memory
-            logger.info(f"Total memory: {total_memory / 1e9:.2f} GB")
-            logger.info(f"Allocated memory: {allocated_memory / 1e9:.2f} GB")
-            logger.info(f"Reserved memory: {reserved_memory / 1e9:.2f} GB")
-            logger.info(f"Available memory (estimated): {available_memory / 1e9:.2f} GB")
+        allocated_memory = torch.cuda.memory_allocated(device)
+        reserved_memory = torch.cuda.memory_reserved(device)
+        available_memory = total_memory - reserved_memory
+        logger.info(f"Total memory: {total_memory / 1e9:.2f} GB")
+        logger.info(f"Allocated memory: {allocated_memory / 1e9:.2f} GB")
+        logger.info(f"Reserved memory: {reserved_memory / 1e9:.2f} GB")
+        logger.info(f"Available memory (estimated): {available_memory / 1e9:.2f} GB")
 
-            images, caps = data
+        images, caps = data
 
-            frames_resized = np.array(
-                [cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
-            #  batch_size, num_channels, num_frames, height, width = x.shape
-            frames_tensor = torch.from_numpy(frames_resized).permute(3, 0, 1, 2).unsqueeze(0)
-            frames_tensor = frames_tensor.to(dtype=torch.float16, non_blocking=True) / 127.5 - 1  # Normalize
+        frames_resized = np.array(
+            [cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
+        #  batch_size, num_channels, num_frames, height, width = x.shape
+        frames_tensor = torch.from_numpy(frames_resized).permute(3, 0, 1, 2).unsqueeze(0)
+        frames_tensor = frames_tensor.to(dtype=torch.float16, non_blocking=True) / 127.5 - 1  # Normalize
 
-            with torch.no_grad():
-                frames_tensor = frames_tensor.to(dtype=torch.float16,device="cuda")
-                latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
-                assert not torch.isnan(latent).any(), "NaN detected in latent!"
-                latent = latent.to(device)
+        with torch.no_grad():
+            frames_tensor = frames_tensor.to(dtype=torch.float16,device="cuda")
+            latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
+            assert not torch.isnan(latent).any(), "NaN detected in latent!"
+            latent = latent.to(device)
 
-            del frames_tensor
-            torch.cuda.empty_cache()
-            gc.collect()
+        del frames_tensor
+        torch.cuda.empty_cache()
+        gc.collect()
 
-            with torch.no_grad():
-                cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
+        with torch.no_grad():
+            cap_feats, cap_mask = encode_prompt(caps, text_encoder, tokenizer, 0.3)  # Empty prompts 0.3 of the time
 
-            loss_item = 0.0
+        loss_item = 0.0
 
-            model_kwargs = dict(cap_feats=cap_feats.contiguous(), cap_mask=cap_mask.contiguous())
+        model_kwargs = dict(cap_feats=cap_feats.contiguous(), cap_mask=cap_mask.contiguous())
 
-            # Forward pass
-            with torch.cuda.amp.autocast(dtype=torch.float32):
-                loss_dict = training_losses(model, latent, latent, model_kwargs)
+        # Forward pass
+        with torch.cuda.amp.autocast(dtype=torch.float32):
+            loss_dict = training_losses(model, latent, latent, model_kwargs)
 
-            loss = loss_dict["loss"].sum()
-            scaler.scale(loss).backward()  # Scale loss and backpropagate
-            logger.info(f"Loss is {loss} for step {step}")
+        loss = loss_dict["loss"].sum()
+        scaler.scale(loss).backward()  # Scale loss and backpropagate
+        logger.info(f"Loss is {loss} for step {step}")
 
-            if (step + 1) % accumulation_steps == 0:
-                logger.info("Stepping optimizer")
-                scaler.unscale_(opt)  # Unscale gradients to FP32
-                scaler.step(opt)  # Step the optimizer with FP32 gradients
-                scaler.update()  # Update the scaler after the optimizer step
-                opt.zero_grad()  # Zero gradients for next iteration
+        if (step + 1) % accumulation_steps == 0:
+            logger.info("Stepping optimizer")
+            scaler.unscale_(opt)  # Unscale gradients to FP32
+            scaler.step(opt)  # Step the optimizer with FP32 gradients
+            scaler.update()  # Update the scaler after the optimizer step
+            opt.zero_grad()  # Zero gradients for next iteration
 
-            loss_item += loss.item()
-            logger.info(f"Loss is {loss} for step {step}")
-        save_file(model.state_dict(), f'custom_ckpt/vae_trained_layers.safetensors')
-        logger.info(f"Saved model checkpoint at epoch {epoch}")
+        loss_item += loss.item()
+        logger.info(f"Loss is {loss} for step {step}")
+        # Save the model every 200 steps (or adjust as needed)
+        if (step + 1) % 200 == 0:
+            save_file(model.state_dict(), f'custom_ckpt/vae_trained_layers.safetensors')
+            logger.info(f"Saved model checkpoint at steps {step+1}")
+
 
 
 if __name__ == '__main__':
