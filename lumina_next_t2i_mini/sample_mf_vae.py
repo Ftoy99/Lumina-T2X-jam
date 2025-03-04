@@ -119,7 +119,7 @@ def main(args, rank, master_port):
     ckpt = load_file(
         f"custom_ckpt/1.safetensors",
     )
-    model.load_state_dict(ckpt, strict=False)
+    model.load_state_dict(ckpt, strict=True)
 
     model.eval().to("cuda", dtype=dtype)
 
