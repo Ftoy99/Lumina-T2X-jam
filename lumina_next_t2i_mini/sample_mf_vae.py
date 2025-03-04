@@ -120,7 +120,7 @@ def main(args, rank, master_port):
     ckpt = load_file(
         f"custom_ckpt/vae_trained_layers.safetensors",
     )
-    model.load_state_dict(ckpt, strict=True)
+    model.load_state_dict(ckpt, strict=False)
     sample_folder_dir = args.image_save_path
 
     if rank == 0:
