@@ -248,17 +248,12 @@ def main(args):
 
         loss_item = 0.0
 
-        # For torch compile speed up
-        latent = latent.contiguous()
-        cap_feats = cap_feats.contiguous()
-        cap_mask = cap_mask.contiguous()
-
         model_kwargs = dict(cap_feats=cap_feats.contiguous(), cap_mask=cap_mask.contiguous())
 
         # Forward pass
         with torch.cuda.amp.autocast(dtype=torch.float32):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
-
+        opt.zero_grad()
         loss = loss_dict["loss"].sum()
         scaler.scale(loss).backward()
 
