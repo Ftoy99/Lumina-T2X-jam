@@ -192,6 +192,7 @@ def main(args):
 
 
     # Model compile and checkpoint
+    model.half()
 
     # Optimizer
     logger.info(f"Creating optimizer")
@@ -256,7 +257,6 @@ def main(args):
         # Forward pass
         with torch.cuda.amp.autocast(dtype=torch.float32):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
-        opt.zero_grad()
         loss = loss_dict["loss"].sum()
         scaler.scale(loss).backward()
 
