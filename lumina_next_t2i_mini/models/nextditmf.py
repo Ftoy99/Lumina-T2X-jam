@@ -305,6 +305,7 @@ class Attention(nn.Module):
         """
         bsz, seqlen, _ = x.shape
         xq, xk, xv = self.wq(x), self.wk(x), self.wv(x)
+        del x
         dtype = xq.dtype
 
         xq = self.q_norm(xq)
@@ -328,11 +329,6 @@ class Attention(nn.Module):
         if n_rep >= 1:
             xk = xk.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
             xv = xv.unsqueeze(3).repeat(1, 1, 1, n_rep, 1).flatten(2, 3)
-        # print(f"[Attention Debug] x {x.shape}")
-        # print(f"[Attention Debug] x_mask {x_mask.shape}")
-        # print(f"[Attention Debug] bsz {bsz}")
-        # print(f"[Attention Debug] seqlen {seqlen}")
-        # print(f"[Attention Debug] x_mask.bool().view(bsz, 1, 1, seqlen) {x_mask.bool().view(bsz, 1, 1, seqlen).shape}")
         output = (
             F.scaled_dot_product_attention(
                 xq.permute(0, 2, 1, 3),
@@ -344,7 +340,6 @@ class Attention(nn.Module):
             .permute(0, 2, 1, 3)
             .to(dtype)
         )
-
         if hasattr(self, "wk_y"):
             yk = self.ky_norm(self.wk_y(y)).view(bsz, -1, self.n_local_kv_heads, self.head_dim)
             yv = self.wv_y(y).view(bsz, -1, self.n_local_kv_heads, self.head_dim)
