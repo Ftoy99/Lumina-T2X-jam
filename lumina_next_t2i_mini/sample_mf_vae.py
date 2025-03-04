@@ -115,12 +115,15 @@ def main(args, rank, master_port):
         cap_feat_dim=cap_feat_dim,
         use_flash_attn=args.use_flash_attn,
     )
-    model.eval().to("cuda", dtype=dtype)
 
     ckpt = load_file(
-        f"custom_ckpt/vae_trained_layers.safetensors",
+        f"custom_ckpt/1.safetensors",
     )
     model.load_state_dict(ckpt, strict=False)
+
+    model.eval().to("cuda", dtype=dtype)
+
+
     sample_folder_dir = args.image_save_path
 
     if rank == 0:
