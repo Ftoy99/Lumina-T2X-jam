@@ -259,6 +259,7 @@ def main(args):
             loss_dict = training_losses(model, latent, latent, model_kwargs)
         loss = loss_dict["loss"].sum()
         scaler.scale(loss).backward()
+        opt.zero_grad()
 
         logger.info(f"Loss is {loss} for step {step}")
 
