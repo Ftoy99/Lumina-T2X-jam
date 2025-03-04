@@ -4,22 +4,19 @@ import math
 import os
 import random
 import socket
-import time
 
 import cv2
 from diffusers import AutoencoderKLCogVideoX
-from diffusers.models import AutoencoderKL
 import numpy as np
 from safetensors.torch import load_file
 import torch
 import torch.distributed as dist
-from torchvision.transforms.functional import to_pil_image
 from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 
 import models
 from transport_mf import ODE
-
+vae_scale = 0.13025
 
 # Adapted from pipelines.StableDiffusionXLPipeline.encode_prompt
 def encode_prompt(prompt_batch, text_encoder, tokenizer, proportion_empty_prompts, is_train=True):
@@ -215,10 +212,9 @@ def main(args, rank, master_port):
                     z, zmf, model.forward_with_cfg, **model_kwargs
                 )
 
-                factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
                 # decoded = vae.decode(samples / factor).sample
 
-                decoded = vae.decode(samples).sample
+                decoded = vae.decode(samples/vae_scale).sample
                 decoded = decoded.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
                 decoded = ((decoded + 1) * 127.5).clamp(0, 255).byte().numpy()
                 print(f"Decoded shape {decoded.shape}")
