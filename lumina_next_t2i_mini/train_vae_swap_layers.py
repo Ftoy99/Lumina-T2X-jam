@@ -289,7 +289,7 @@ def main(args):
         # Save the model every 200 steps (or adjust as needed)
         if (step + 1) % 200 == 0:
             save_file(model.state_dict(), f'custom_ckpt/1.safetensors')
-            logger.info(model.state_dict())
+            logger.info(f"State dict keys: {list(model.state_dict().keys())}")  # Print all keys
             logger.info(f"Saved model checkpoint at steps {step+1}")
 
 
