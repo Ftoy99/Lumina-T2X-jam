@@ -189,7 +189,7 @@ def main(args):
 
     # Model compile and checkpoint
     model.half()
-    model = torch.compile(model, mode="reduce-overhead", backend="inductor", dynamic=False)
+    # model = torch.compile(model, mode="reduce-overhead", backend="inductor", dynamic=False)
 
     # Optimizer
     logger.info(f"Creating optimizer")
