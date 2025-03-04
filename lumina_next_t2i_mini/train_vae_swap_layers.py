@@ -160,7 +160,7 @@ def main(args):
     # Load vae
     logger.info(f"Creating vae {dataset_path}")
     vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
-        "cuda")
+        "cpu")
     torch.cuda.empty_cache()
     # Creating model
     logger.info(f"Creating model {dataset_path}")
@@ -189,7 +189,6 @@ def main(args):
 
     # Model compile and checkpoint
     model.half()
-    # model = torch.compile(model, mode="reduce-overhead", backend="inductor", dynamic=False)
 
     # Optimizer
     logger.info(f"Creating optimizer")
@@ -232,7 +231,7 @@ def main(args):
             [cv2.resize(numpy.array(frame), (512, 512)) for frame in images])  # Resize all frames
         #  batch_size, num_channels, num_frames, height, width = x.shape
         frames_tensor = torch.from_numpy(frames_resized).permute(3, 0, 1, 2).unsqueeze(0)
-        frames_tensor = frames_tensor.to(device=device, dtype=torch.float16, non_blocking=True) / 127.5 - 1  # Normalize
+        frames_tensor = frames_tensor.to(dtype=torch.float16, non_blocking=True) / 127.5 - 1  # Normalize
 
         with torch.no_grad():
             latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
