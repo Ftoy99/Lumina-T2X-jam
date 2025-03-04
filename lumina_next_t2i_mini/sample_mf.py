@@ -18,6 +18,7 @@ from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 
 import models
+from lumina_next_t2i_mini.models.nextditmf import NextDiT
 from transport_mf import ODE
 
 
@@ -105,16 +106,8 @@ def main(args, rank, master_port):
     vae.enable_slicing()
     vae.enable_tiling()
 
-    if dist.get_rank() == 0:
-        print(f"Creating DiT: {train_args.model}")
-    # latent_size = train_args.image_size // 8
-    train_args.model = train_args.model + "_mf"
-    print(f"Model is train_args {train_args.model}")
-    model = models.__dict__[train_args.model](
-        qk_norm=train_args.qk_norm,
-        cap_feat_dim=cap_feat_dim,
-        use_flash_attn=args.use_flash_attn,
-    )
+    print("Creating model")
+    model = NextDiT(patch_size=2, dim=2304, n_layers=24, n_heads=32, n_kv_heads=8, cap_feat_dim=cap_feat_dim)
     model.eval().to("cuda", dtype=dtype)
 
     if args.debug == False:
