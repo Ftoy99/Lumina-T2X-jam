@@ -117,18 +117,10 @@ def main(args, rank, master_port):
     )
     model.eval().to("cuda", dtype=dtype)
 
-    if args.debug == False:
-        # assert train_args.model_parallel_size == args.num_gpus
-        if args.ema:
-            print("Loading ema model.")
-        print(f"load file {args}")
-        ckpt = load_file(
-            os.path.join(
-                args.ckpt,
-                f"vae_trained_layers.safetensors",
-            )
-        )
-        model.load_state_dict(ckpt, strict=False)
+    ckpt = load_file(
+        f"custom_ckpt/vae_trained_layers.safetensors",
+    )
+    model.load_state_dict(ckpt, strict=True)
     sample_folder_dir = args.image_save_path
 
     if rank == 0:
