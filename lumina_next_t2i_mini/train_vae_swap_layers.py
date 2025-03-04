@@ -270,7 +270,7 @@ def main(args):
             opt.zero_grad()
 
         loss_item += loss.item()
-        logger.info(f"Loss {loss}")
+        logger.info(f"Loss is {loss} for step {step}")
 
 
 if __name__ == '__main__':
