@@ -159,8 +159,8 @@ def main(args):
 
     # Load vae
     logger.info(f"Creating vae {dataset_path}")
-    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float32).to(
-        "cpu")
+    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
+        "cuda")
     torch.cuda.empty_cache()
     # Creating model
     logger.info(f"Creating model {dataset_path}")
@@ -253,7 +253,7 @@ def main(args):
         frames_tensor = frames_tensor.to(dtype=torch.float16, non_blocking=True) / 127.5 - 1  # Normalize
 
         with torch.no_grad():
-            frames_tensor = frames_tensor.to(dtype=torch.float32)
+            frames_tensor = frames_tensor.to(dtype=torch.float16,device="cuda")
             latent = vae.encode(frames_tensor).latent_dist.sample().mul_(vae_scale)
             assert not torch.isnan(latent).any(), "NaN detected in latent!"
             latent = latent.to(device)
