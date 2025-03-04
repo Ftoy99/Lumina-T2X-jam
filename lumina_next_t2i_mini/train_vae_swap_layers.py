@@ -203,7 +203,7 @@ def main(args):
     max_steps = 100
     logger.info(f"Training for {max_steps:,} steps...")
 
-    accumulation_steps = 50
+    accumulation_steps = 5
 
     # Create DataLoader
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True, collate_fn=ds_collate_fn, pin_memory=False)
