@@ -192,7 +192,6 @@ def main(args):
 
 
     # Model compile and checkpoint
-    model.half()
 
     # Optimizer
     logger.info(f"Creating optimizer")
