@@ -196,10 +196,21 @@ def main(args):
     # Optimizer
     logger.info(f"Creating optimizer")
     # Train only vae conv layers
+    # Freeze all
+    for param in model.parameters():
+        param.requires_grad = False
+
+    # Unfreeze
+    for param in model.vae_out.parameters():
+        param.requires_grad = True
+    for param in model.vae_in.parameters():
+        param.requires_grad = True
+
     parameters_to_train = {
         {'params': model.vae_out.parameters(), 'lr': 1e-4},
         {'params': model.vae_in.parameters(), 'lr': 1e-4},
     }
+
     opt = torch.optim.AdamW(parameters_to_train, lr=1e-4)
 
     logger.info("Setting model to training")
