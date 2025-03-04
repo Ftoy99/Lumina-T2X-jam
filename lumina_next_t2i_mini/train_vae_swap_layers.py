@@ -187,6 +187,10 @@ def main(args):
         )
     model.load_state_dict(ckpt, strict=False)
 
+    # TODO Remove some layers for memory
+    model.layers = vae.layers[:-4]
+
+
     # Model compile and checkpoint
     model.half()
 
