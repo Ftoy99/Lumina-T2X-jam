@@ -11,7 +11,7 @@ import torch
 from PIL import Image
 import cv2
 from diffusers import AutoencoderKLCogVideoX
-from safetensors.torch import load_file
+from safetensors.torch import load_file, save_file
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
@@ -183,7 +183,7 @@ def main(args):
             model.x_cat_emb.weight[:, motion_dim_start:].zero_()
     else:
         ckpt = load_file(
-            f"custom_ckpt/consolidated_ema.00-of-01.safetensors",
+            f"custom_ckpt/vae_trained_layers.safetensors",
         )
     model.load_state_dict(ckpt, strict=False)
 
@@ -287,7 +287,11 @@ def main(args):
         loss_item += loss.item()
         logger.info(f"Loss is {loss} for step {step}")
 
-        if step==max_steps
+        # Save the model every 200 steps
+        if (step + 1) % 200 == 0:
+
+            save_file(model.state_dict(), f'custom_ckpt/vae_trained_layers.safetensors')
+            logger.info(f"Saved model checkpoint at step {step + 1}")
 
 
 if __name__ == '__main__':
