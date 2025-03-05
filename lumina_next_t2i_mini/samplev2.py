@@ -181,11 +181,11 @@ def main(args, rank, master_port):
                 latent_w, latent_h = w // 8, h // 8
 
                 # Latent
-                z = torch.randn([1, 4, 1, latent_w, latent_h], device="cuda").to(dtype)
+                z = torch.randn([1, 4, 2, latent_w, latent_h], device="cuda").to(dtype)
                 z = z.repeat(n * 2, 1, 1, 1, 1)
 
                 # Latent Motion Noise
-                zmf = torch.randn([1, 4, 1, latent_w, latent_h], device="cuda").to(dtype)
+                zmf = torch.randn([1, 4, 2, latent_w, latent_h], device="cuda").to(dtype)
                 zmf = zmf.repeat(n * 2, 1, 1, 1, 1)
 
                 with torch.no_grad():
