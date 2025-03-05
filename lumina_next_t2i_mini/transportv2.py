@@ -100,8 +100,8 @@ class ODE:
             model_output, model_output_xmf = _fn(t[i], samples_x, samples_xmf)
 
             #Unsqueeze to amtch input tensors
-            model_output.unsqueeze(dim=2)
-            model_output_xmf.unsqueeze(dim=2)
+            model_output = model_output.unsqueeze(dim=2)
+            model_output_xmf =model_output_xmf.unsqueeze(dim=2)
             print(f"samples_x shape {samples_x.shape} model_output shape {model_output.shape}")
             print(f"samples_xmf shape {samples_xmf.shape} model_output_xmf shape {model_output_xmf.shape}")
 
