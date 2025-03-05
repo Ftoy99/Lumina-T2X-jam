@@ -780,10 +780,11 @@ class NextDiT(nn.Module):
         freqs = torch.outer(timestep, freqs).float()  # type: ignore
         freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
 
-        freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)
-        freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)
-        freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w], dim=-1).flatten(2)
+        freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)  # Height
+        freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)  # Width
+        freqs_cis_t = freqs_cis.view(1, 1, dim // 4, end).repeat(end, end, 1, 1)  # Time
 
+        freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w, freqs_cis_t], dim=-1).flatten(2)
         return freqs_cis
 
     def parameter_count(self) -> int:
