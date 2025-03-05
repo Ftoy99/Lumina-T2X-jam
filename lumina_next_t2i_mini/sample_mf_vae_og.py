@@ -6,7 +6,7 @@ import random
 import socket
 
 import cv2
-from diffusers import AutoencoderKLCogVideoX, AutoencoderKL
+from diffusers import AutoencoderKLCogVideoX
 import numpy as np
 from safetensors.torch import load_file
 import torch
@@ -98,10 +98,11 @@ def main(args, rank, master_port):
 
     if dist.get_rank() == 0:
         print(f"Creating vae: {train_args.vae}")
-    vae = AutoencoderKL.from_pretrained(
-        (f"stabilityai/sd-vae-ft-{train_args.vae}" if train_args.vae != "sdxl" else "stabilityai/sdxl-vae"),
-        torch_dtype=torch.float32,
-    ).cuda()
+    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
+        "cuda")
+
+    vae.enable_slicing()
+    vae.enable_tiling()
 
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
@@ -174,13 +175,13 @@ def main(args, rank, master_port):
                 latent_w, latent_h = w // 8, h // 8
 
                 # Latent picture noise
-                z = torch.randn([1, 4, 1, latent_w, latent_h], device="cuda").to(dtype)
+                z = torch.randn([1, 16, 5, latent_w, latent_h], device="cuda").to(dtype)
                 z = z.repeat(n * 2, 1, 1, 1, 1)
 
                 # print(f"z.shape {z.shape}")
 
                 # Latent Motion Noise
-                zmf = torch.randn([1, 4, 1, latent_w, latent_h], device="cuda").to(dtype)
+                zmf = torch.randn([1, 16, 5, latent_w, latent_h], device="cuda").to(dtype)
                 zmf = zmf.repeat(n * 2, 1, 1, 1, 1)
 
                 with torch.no_grad():
@@ -215,19 +216,15 @@ def main(args, rank, master_port):
 
                 # decoded = vae.decode(samples / factor).sample
 
-                samples = samples.squeeze(dim=2)
                 decoded = vae.decode(samples / vae_scale).sample
-                print(decoded.squeeze(0).shape)
-                decoded = decoded.squeeze(0).permute(0, 2, 3,1).cpu().float()
+                decoded = decoded.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
                 decoded = ((decoded + 1) * 127.5).clamp(0, 255).byte().numpy()
                 print(f"Decoded shape {decoded.shape}")
                 # samples = (samples + 1.0) / 2.0
                 # samples.clamp_(0.0, 1.0)
 
-                samples_xmf = samples_xmf.squeeze(dim=2)
                 decoded_mf = vae.decode(samples_xmf).sample
-                print(decoded_mf.squeeze(0).shape)
-                decoded_mf = decoded_mf.squeeze(0).permute(0, 2, 3, 1).cpu().float()
+                decoded_mf = decoded_mf.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
                 decoded_mf = ((decoded_mf + 1) * 127.5).clamp(0, 255).byte().numpy()
 
                 # Save samples to disk as individual .png files
@@ -242,7 +239,6 @@ def main(args, rank, master_port):
                     out.release()
 
                 # Save samples_xmf to disk as individual .png files
-
                 for i, (decoded_mf_vid, cap) in enumerate(zip(decoded_mf, caps_list)):
                     save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}_mf.mp4"
                     F, H, W, _ = decoded_mf_vid.shape
