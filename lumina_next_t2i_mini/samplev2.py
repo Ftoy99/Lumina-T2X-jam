@@ -231,18 +231,19 @@ def main(args, rank, master_port):
 
                 # Save samples to disk as individual .png files
                 for i, (sample, cap) in enumerate(zip(samples, caps_list)):
-                    img = to_pil_image(sample.float())
-                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png"
-                    img.save(save_path)
-                    info.append(
-                        {
-                            "caption": cap,
-                            "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
-                            "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
-                            "solver": args.solver,
-                            "num_sampling_steps": args.num_sampling_steps,
-                        }
-                    )
+                    for x,decoded_img in enumerate(sample):
+                        img = to_pil_image(decoded_img.float())
+                        save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_frame_{x}.png"
+                        img.save(save_path)
+                        info.append(
+                            {
+                                "caption": cap,
+                                "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
+                                "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
+                                "solver": args.solver,
+                                "num_sampling_steps": args.num_sampling_steps,
+                            }
+                        )
 
                 with open(info_path, "w") as f:
                     f.write(json.dumps(info))
