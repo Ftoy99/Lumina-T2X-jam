@@ -215,6 +215,7 @@ def main(args, rank, master_port):
 
                 # decoded = vae.decode(samples / factor).sample
 
+                samples = samples.squeeze(dim=2)
                 decoded = vae.decode(samples / vae_scale).sample
                 decoded = decoded.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
                 decoded = ((decoded + 1) * 127.5).clamp(0, 255).byte().numpy()
@@ -222,6 +223,7 @@ def main(args, rank, master_port):
                 # samples = (samples + 1.0) / 2.0
                 # samples.clamp_(0.0, 1.0)
 
+                samples_xmf = samples_xmf.squeeze(dim=2)
                 decoded_mf = vae.decode(samples_xmf).sample
                 decoded_mf = decoded_mf.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
                 decoded_mf = ((decoded_mf + 1) * 127.5).clamp(0, 255).byte().numpy()
@@ -238,7 +240,7 @@ def main(args, rank, master_port):
                     out.release()
 
                 # Save samples_xmf to disk as individual .png files
-                samples.squeeze(dim=2)
+
                 for i, (decoded_mf_vid, cap) in enumerate(zip(decoded_mf, caps_list)):
                     save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}_mf.mp4"
                     F, H, W, _ = decoded_mf_vid.shape
