@@ -219,29 +219,26 @@ def main(args, rank, master_port):
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
                 samples = samples[:1]
-                print(f"samples shape {samples.shape}")
                 samples = samples.squeeze(dim=0).permute(1, 0, 2, 3)
-                print(f"samples shape {samples.shape}")
                 samples = vae.decode(samples / factor).sample
                 samples = (samples + 1.0) / 2.0
                 samples.clamp_(0.0, 1.0)
 
                 # Save samples to disk as individual .png files
+                print(f"samplel shape {samples.shape}")
                 for i, (sample, cap) in enumerate(zip(samples, caps_list)):
-                    for x in range(sample.shape[0]):
-                        print(sample[x].shape)
-                        img = to_pil_image(sample[x].float())
-                        save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_{x}.png"
-                        img.save(save_path)
-                        info.append(
-                            {
-                                "caption": cap,
-                                "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
-                                "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
-                                "solver": args.solver,
-                                "num_sampling_steps": args.num_sampling_steps,
-                            }
-                        )
+                    img = to_pil_image(sample.float())
+                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_{x}.png"
+                    img.save(save_path)
+                    info.append(
+                        {
+                            "caption": cap,
+                            "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
+                            "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
+                            "solver": args.solver,
+                            "num_sampling_steps": args.num_sampling_steps,
+                        }
+                    )
 
                 with open(info_path, "w") as f:
                     f.write(json.dumps(info))
