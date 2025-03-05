@@ -104,7 +104,7 @@ def main(args, rank, master_port):
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
     # latent_size = train_args.image_size // 8
-    model = models.__dict__[train_args.model+"v2"](
+    model = models.__dict__[train_args.model+"_v2"](
         qk_norm=train_args.qk_norm,
         cap_feat_dim=cap_feat_dim,
         use_flash_attn=args.use_flash_attn,
