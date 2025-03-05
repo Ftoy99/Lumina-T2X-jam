@@ -206,11 +206,11 @@ class Attention(nn.Module):
     ) -> torch.Tensor:
         with torch.cuda.amp.autocast(enabled=False):
             B, N, H, D = x_in.shape  # Get batch, num tokens, heads, dim
-            print("freqs_cis shape:", freqs_cis.shape)
-
-
             x = torch.view_as_complex(x_in.float().reshape(*x_in.shape[:-1], -1, 2))
             freqs_cis = freqs_cis.unsqueeze(2)
+            print("rope freqs_cis shape:", freqs_cis.shape)
+            print("rope x shape:", x.shape)
+
             x_out = torch.view_as_real(x * freqs_cis).flatten(3)
             return x_out.type_as(x_in)
 
