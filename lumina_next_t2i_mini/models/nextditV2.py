@@ -203,25 +203,7 @@ class Attention(nn.Module):
             x_in: torch.Tensor,
             freqs_cis: torch.Tensor,
     ) -> torch.Tensor:
-        """
-        Apply rotary embeddings to input tensors using the given frequency
-        tensor.
-
-        This function applies rotary embeddings to the given query 'xq' and
-        key 'xk' tensors using the provided frequency tensor 'freqs_cis'. The
-        input tensors are reshaped as complex numbers, and the frequency tensor
-        is reshaped for broadcasting compatibility. The resulting tensors
-        contain rotary embeddings and are returned as real tensors.
-
-        Args:
-            x_in (torch.Tensor): Query or Key tensor to apply rotary embeddings.
-            freqs_cis (torch.Tensor): Precomputed frequency tensor for complex
-                exponentials.
-
-        Returns:
-            Tuple[torch.Tensor, torch.Tensor]: Tuple of modified query tensor
-                and key tensor with rotary embeddings.
-        """
+        print(f"x_in shape is {x_in.shape}")
         with torch.cuda.amp.autocast(enabled=False):
             x = torch.view_as_complex(x_in.float().reshape(*x_in.shape[:-1], -1, 2))
             freqs_cis = freqs_cis.unsqueeze(2)
