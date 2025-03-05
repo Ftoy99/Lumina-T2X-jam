@@ -218,7 +218,7 @@ def main(args, rank, master_port):
                 samples = samples.squeeze(dim=2)
                 decoded = vae.decode(samples / vae_scale).sample
                 print(decoded.squeeze(0).shape)
-                decoded = decoded.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
+                decoded = decoded.squeeze(0).permute(0, 2, 3,1).cpu().float()
                 decoded = ((decoded + 1) * 127.5).clamp(0, 255).byte().numpy()
                 print(f"Decoded shape {decoded.shape}")
                 # samples = (samples + 1.0) / 2.0
@@ -227,7 +227,7 @@ def main(args, rank, master_port):
                 samples_xmf = samples_xmf.squeeze(dim=2)
                 decoded_mf = vae.decode(samples_xmf).sample
                 print(decoded_mf.squeeze(0).shape)
-                decoded_mf = decoded_mf.squeeze(0).permute(0, 2, 3, 4, 1).cpu().float()
+                decoded_mf = decoded_mf.squeeze(0).permute(0, 2, 3, 1).cpu().float()
                 decoded_mf = ((decoded_mf + 1) * 127.5).clamp(0, 255).byte().numpy()
 
                 # Save samples to disk as individual .png files
