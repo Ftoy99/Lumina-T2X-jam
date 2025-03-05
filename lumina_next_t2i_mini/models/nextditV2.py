@@ -259,8 +259,9 @@ class Attention(nn.Module):
         xk = xk.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
         xv = xv.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
 
-        xq = Attention.apply_rotary_emb(xq, freqs_cis=freqs_cis)
-        xk = Attention.apply_rotary_emb(xk, freqs_cis=freqs_cis)
+        # Updated rotary embedding application
+        xq = Attention.apply_3d_rotary_emb(xq, *freqs_cis)
+        xk = Attention.apply_3d_rotary_emb(xk, *freqs_cis)
 
         xq, xk = xq.to(dtype), xk.to(dtype)
 
@@ -608,9 +609,12 @@ class NextDiT(nn.Module):
             layer.attention.use_flash_attn = use_flash_attn
 
         assert (dim // n_heads) % 4 == 0, "2d rope needs head dim to be divisible by 4"
-        self.freqs_cis = NextDiT.precompute_freqs_cis(
-            dim*4 // n_heads,
-            384,
+        # Updated frequency precomputation
+        self.freqs_cis = NextDiT.precompute_3d_freqs_cis(
+            dim // n_heads,
+            end_x=384,  # Replace with appropriate end_x value
+            end_y=384,  # Replace with appropriate end_y value
+            end_t=384,  # Replace with appropriate end_t value
             scale_factor=scale_factor,
         )
         self.dim = dim
@@ -759,32 +763,29 @@ class NextDiT(nn.Module):
         return output
 
     @staticmethod
-    def precompute_freqs_cis(
+    def precompute_3d_freqs_cis(
             dim: int,
-            end: int,
+            end_x: int,
+            end_y: int,
+            end_t: int,
             theta: float = 10000.0,
             scale_factor: float = 1.0,
             scale_watershed: float = 1.0,
             timestep: float = 1.0,
     ):
         """
-        Precompute the frequency tensor for complex exponentials (cis) with
-        given dimensions.
-
-        This function calculates a frequency tensor with complex exponentials
-        using the given dimension 'dim' and the end index 'end'. The 'theta'
-        parameter scales the frequencies. The returned tensor contains complex
-        values in complex64 data type.
+        Precompute frequency tensors for 3D-RoPE (x, y, t dimensions) separately.
 
         Args:
-            dim (int): Dimension of the frequency tensor.
-            end (int): End index for precomputing frequencies.
-            theta (float, optional): Scaling factor for frequency computation.
-                Defaults to 10000.0.
+            dim (int): Total dimension of the frequency tensor.
+            end_x (int): End index for the x-dimension.
+            end_y (int): End index for the y-dimension.
+            end_t (int): End index for the t-dimension.
+            theta (float, optional): Scaling factor for frequency computation. Defaults to 10000.0.
 
         Returns:
-            torch.Tensor: Precomputed frequency tensor with complex
-                exponentials.
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+                Frequency tensors for x, y, and t dimensions.
         """
 
         if timestep < scale_watershed:
@@ -795,19 +796,20 @@ class NextDiT(nn.Module):
             ntk_factor = scale_factor
 
         theta = theta * ntk_factor
-        freqs = 1.0 / (theta ** (torch.arange(0, dim, 4)[: (dim // 4)].float().cuda() / dim)) / linear_factor
+        Cx, Cy, Ct = dim * 3 // 8, dim * 3 // 8, dim * 2 // 8  # Channel split
 
-        timestep = torch.arange(end, device=freqs.device, dtype=torch.float)  # type: ignore
+        def compute_freqs(end, C):
+            freqs = 1.0 / (theta ** (torch.arange(0, C, 4)[: (C // 4)].float().cuda() / C)) / linear_factor
+            timestep = torch.arange(end, device=freqs.device, dtype=torch.float)
+            freqs = torch.outer(timestep, freqs).float()
+            return torch.polar(torch.ones_like(freqs), freqs)  # Complex64
 
-        freqs = torch.outer(timestep, freqs).float()  # type: ignore
-        freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
+        # Compute frequencies for each dimension
+        freqs_cis_x = compute_freqs(end_x, Cx)
+        freqs_cis_y = compute_freqs(end_y, Cy)
+        freqs_cis_t = compute_freqs(end_t, Ct)
 
-        freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)
-        freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)
-        freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w], dim=-1).flatten(2)
-
-        return freqs_cis
-
+        return freqs_cis_x, freqs_cis_y, freqs_cis_t
     def parameter_count(self) -> int:
         total_params = 0
 
