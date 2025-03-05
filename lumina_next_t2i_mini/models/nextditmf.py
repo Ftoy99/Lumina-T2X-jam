@@ -834,8 +834,8 @@ class NextDiT(nn.Module):
         y: (N,) tensor of class labels
         """
         # 16 Channels from vae to 4
-        x = self.vae_in(x)
-        xmf = self.vae_in(xmf)
+        # x = self.vae_in(x)
+        # xmf = self.vae_in(xmf)
         assert not torch.isnan(x).any(), "NaN detected after vae_in x!"
         assert not torch.isnan(xmf).any(), "NaN detected after vae_in xmf!"
 
@@ -876,8 +876,8 @@ class NextDiT(nn.Module):
 
         assert not torch.isnan(x_out).any(), "NaN detected before vae_out x_out!"
         assert not torch.isnan(xmf_out).any(), "NaN detected before vae_out xmf_out!"
-        x_out = self.vae_out(x_out)
-        xmf_out = self.vae_out(xmf_out)
+        # x_out = self.vae_out(x_out)
+        # xmf_out = self.vae_out(xmf_out)
         assert not torch.isnan(x_out).any(), "NaN detected after vae_out x_out!"
         assert not torch.isnan(xmf_out).any(), "NaN detected after vae_out xmf_out!"
 
