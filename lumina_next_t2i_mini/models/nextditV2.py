@@ -679,10 +679,15 @@ class NextDiT(nn.Module):
         """
         x_is_tensor = isinstance(x, torch.Tensor)
 
+        #
+
+        test_x, _, _, _ = self.patchify_and_embed(x)
+        print(f"Testing shape of patchify test_x {test_x.shape}")
+
         # Concat x and motion flow to pass together
         x = torch.concat((x, xmf), 1)
-
         x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
+        print(f"Testing shape of patchify x {x.shape}")
         freqs_cis = freqs_cis.to(x.device)
 
         t = self.t_embedder(t)  # (N, D)
