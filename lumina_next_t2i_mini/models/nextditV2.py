@@ -619,32 +619,40 @@ class NextDiT(nn.Module):
         self.pad_token = nn.Parameter(torch.empty(dim))
         nn.init.normal_(self.pad_token, std=0.02)
 
-    def unpatchify(self, x: torch.Tensor, img_size: List[Tuple[int, int]], return_tensor=False) -> List[torch.Tensor]:
+    def unpatchify(self, x: torch.Tensor, img_size: List[Tuple[int, int]], frames, return_tensor=False) -> List[
+        torch.Tensor]:
         """
         x: (N, T, patch_size**2 * C)
         imgs: (N, H, W, C)
         """
         pH = pW = self.patch_size
-        if return_tensor:
-            H, W = img_size[0]
-            B = x.size(0)
-            L = (H // pH) * (W // pW)
-            x = x[:, :L].view(B, H // pH, W // pW, pH, pW, self.out_channels)
-            x = x.permute(0, 5, 1, 3, 2, 4).flatten(4, 5).flatten(2, 3)
-            return x
-        else:
-            imgs = []
-            for i in range(x.size(0)):
-                H, W = img_size[i]
-                L = (H // pH) * (W // pW)
-                imgs.append(
-                    x[i][:L]
-                    .view(H // pH, W // pW, pH, pW, self.out_channels)
-                    .permute(4, 0, 2, 1, 3)
-                    .flatten(3, 4)
-                    .flatten(1, 2)
-                )
-        return imgs
+        H, W = img_size[0]
+        B = x.size(0)
+        F = frames
+        # Compute number of patches per frame
+        Hn, Wn = H // pH, W // pW
+        L = Hn * Wn * frames  # Total patches per sample
+
+        # Original
+        #     H, W = img_size[0]
+        #     B = x.size(0)
+        #     L = (H // pH) * (W // pW)
+        #     x = x[:, :L].view(B, H // pH, W // pW, pH, pW, self.out_channels)
+        #     x = x.permute(0, 5, 1, 3, 2, 4).flatten(4, 5).flatten(2, 3)
+        #     return x
+
+        x = x[:, :L]  # Remains the same meaning this is ok we have as many patches as we should have.
+
+        x = x.view(B, Hn, Wn, F, pH, pW, self.out_channels)
+
+        x = x.permute(0, 6, 3, 1, 4, 2, 5)
+        # B C F Hn pH Wn pW
+        # 0 1 2 3  4  5  6
+
+        x = x.flatten(3, 4)
+        x = x.flatten(4, 5)
+
+        return x
 
     def patchify_and_embed(
             self, x: List[torch.Tensor] | torch.Tensor
