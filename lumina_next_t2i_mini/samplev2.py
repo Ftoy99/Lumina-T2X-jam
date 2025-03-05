@@ -229,6 +229,7 @@ def main(args, rank, master_port):
 
                 # Save samples to disk as individual .png files
                 for i, (sample, cap) in enumerate(zip(samples, caps_list)):
+                    print(f"sampel dimensions {samples.shape}")
                     img = to_pil_image(sample.float())
                     save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png"
                     img.save(save_path)
