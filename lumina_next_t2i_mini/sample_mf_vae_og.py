@@ -6,7 +6,7 @@ import random
 import socket
 
 import cv2
-from diffusers import AutoencoderKLCogVideoX
+from diffusers import AutoencoderKLCogVideoX, AutoencoderKL
 import numpy as np
 from safetensors.torch import load_file
 import torch
@@ -98,11 +98,10 @@ def main(args, rank, master_port):
 
     if dist.get_rank() == 0:
         print(f"Creating vae: {train_args.vae}")
-    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(
-        "cuda")
-
-    vae.enable_slicing()
-    vae.enable_tiling()
+    vae = AutoencoderKL.from_pretrained(
+        (f"stabilityai/sd-vae-ft-{train_args.vae}" if train_args.vae != "sdxl" else "stabilityai/sdxl-vae"),
+        torch_dtype=torch.float32,
+    ).cuda()
 
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
@@ -175,13 +174,13 @@ def main(args, rank, master_port):
                 latent_w, latent_h = w // 8, h // 8
 
                 # Latent picture noise
-                z = torch.randn([1, 16, 5, latent_w, latent_h], device="cuda").to(dtype)
+                z = torch.randn([1, 16, 1, latent_w, latent_h], device="cuda").to(dtype)
                 z = z.repeat(n * 2, 1, 1, 1, 1)
 
                 # print(f"z.shape {z.shape}")
 
                 # Latent Motion Noise
-                zmf = torch.randn([1, 16, 5, latent_w, latent_h], device="cuda").to(dtype)
+                zmf = torch.randn([1, 16, 1, latent_w, latent_h], device="cuda").to(dtype)
                 zmf = zmf.repeat(n * 2, 1, 1, 1, 1)
 
                 with torch.no_grad():
