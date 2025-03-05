@@ -199,34 +199,34 @@ class Attention(nn.Module):
         return freqs_cis.view(*shape)
 
     @staticmethod
-    def apply_rotary_emb(
-            x_in: torch.Tensor,
-            freqs_cis: torch.Tensor,
-    ) -> torch.Tensor:
+    def apply_3d_rotary_emb(x: torch.Tensor, freqs_cis_x: torch.Tensor, freqs_cis_y: torch.Tensor,
+                            freqs_cis_t: torch.Tensor):
         """
-        Apply rotary embeddings to input tensors using the given frequency
-        tensor.
-
-        This function applies rotary embeddings to the given query 'xq' and
-        key 'xk' tensors using the provided frequency tensor 'freqs_cis'. The
-        input tensors are reshaped as complex numbers, and the frequency tensor
-        is reshaped for broadcasting compatibility. The resulting tensors
-        contain rotary embeddings and are returned as real tensors.
+        Apply 3D Rotary Positional Embedding (3D-RoPE) to an input tensor.
 
         Args:
-            x_in (torch.Tensor): Query or Key tensor to apply rotary embeddings.
-            freqs_cis (torch.Tensor): Precomputed frequency tensor for complex
-                exponentials.
+            x (torch.Tensor): Input tensor of shape (B, H, W, T, C).
+            freqs_cis_x (torch.Tensor): Precomputed RoPE frequencies for x-dimension.
+            freqs_cis_y (torch.Tensor): Precomputed RoPE frequencies for y-dimension.
+            freqs_cis_t (torch.Tensor): Precomputed RoPE frequencies for t-dimension.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor]: Tuple of modified query tensor
-                and key tensor with rotary embeddings.
+            torch.Tensor: Tensor with applied 3D-RoPE encoding.
         """
-        with torch.cuda.amp.autocast(enabled=False):
-            x = torch.view_as_complex(x_in.float().reshape(*x_in.shape[:-1], -1, 2))
-            freqs_cis = freqs_cis.unsqueeze(2)
-            x_out = torch.view_as_real(x * freqs_cis).flatten(3)
-            return x_out.type_as(x_in)
+        B, H, W, T, C = x.shape
+        Cx, Cy, Ct = C * 3 // 8, C * 3 // 8, C * 2 // 8  # Channel split
+
+        def apply_rope(x_part, freqs):
+            x_part = x_part.reshape(B, -1, 2)  # Convert last dim into complex pairs
+            x_part = torch.view_as_complex(x_part) * freqs.unsqueeze(0)  # Apply rotation
+            return torch.view_as_real(x_part).reshape(B, *x_part.shape[1:-1], -1)  # Convert back
+
+        x_x, x_y, x_t = x[..., :Cx], x[..., Cx:Cx + Cy], x[..., Cx + Cy:]
+        x_x = apply_rope(x_x, freqs_cis_x)
+        x_y = apply_rope(x_y, freqs_cis_y)
+        x_t = apply_rope(x_t, freqs_cis_t)
+
+        return torch.cat([x_x, x_y, x_t], dim=-1)
 
     def forward(
             self,
