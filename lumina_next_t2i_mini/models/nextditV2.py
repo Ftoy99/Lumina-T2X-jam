@@ -721,14 +721,14 @@ class NextDiT(nn.Module):
         for classifier-free guidance.
         """
         # # https://github.com/openai/glide-text2im/blob/main/notebooks/text2im.ipynb
-        self.freqs_cis = NextDiT.precompute_freqs_cis(
+        # Updated frequency precomputation
+        self.freqs_cis = NextDiT.precompute_3d_freqs_cis(
             self.dim // self.n_heads,
-            384,
+            end_x=384,  # Replace with appropriate end_x value
+            end_y=384,  # Replace with appropriate end_y value
+            end_t=384,  # Replace with appropriate end_t value
             scale_factor=scale_factor,
-            scale_watershed=scale_watershed,
-            timestep=t[0].item(),
         )
-
         if proportional_attn:
             assert base_seqlen is not None
             for layer in self.layers:
