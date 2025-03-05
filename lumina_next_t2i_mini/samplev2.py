@@ -219,24 +219,31 @@ def main(args, rank, master_port):
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
                 samples = samples.squeeze(dim=2)
-                samples = vae.decode(samples / factor).sample
-                samples = (samples + 1.0) / 2.0
-                samples.clamp_(0.0, 1.0)
+
+                # Assuming 'samples' has shape [batch_size, num_frames, channels, height, width]
+                decoded_frames = []
+                for i in range(samples.shape[1]):  # Loop over the frame dimension
+                    frame = samples[:, i]  # Extract each frame (batch_size, channels, height, width)
+                    decoded_frame = vae.decode(frame / factor).sample()  # Decode the frame
+                    decoded_frame = (decoded_frame + 1.0) / 2.0  # Normalize the decoded frame
+                    decoded_frame.clamp_(0.0, 1.0)  # Clamp the pixel values
+                    decoded_frames.append(decoded_frame)
 
                 # Save samples to disk as individual .png files
-                for i, (sample, cap) in enumerate(zip(samples, caps_list)):
-                    img = to_pil_image(sample.float())
-                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png"
-                    img.save(save_path)
-                    info.append(
-                        {
-                            "caption": cap,
-                            "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
-                            "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
-                            "solver": args.solver,
-                            "num_sampling_steps": args.num_sampling_steps,
-                        }
-                    )
+                for i, (sample, cap) in enumerate(zip(decoded_frames, caps_list)):
+                    for x,decoded_img in enumerate(decoded_frames):
+                        img = to_pil_image(decoded_img.float())
+                        save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_frame{x}.png"
+                        img.save(save_path)
+                        info.append(
+                            {
+                                "caption": cap,
+                                "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
+                                "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
+                                "solver": args.solver,
+                                "num_sampling_steps": args.num_sampling_steps,
+                            }
+                        )
 
                 with open(info_path, "w") as f:
                     f.write(json.dumps(info))
