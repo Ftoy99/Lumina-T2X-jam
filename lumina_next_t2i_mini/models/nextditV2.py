@@ -711,8 +711,8 @@ class NextDiT(nn.Module):
 
         print(f"x shape before unpatchify {x.shape}")
 
-        x_out = self.unpatchify(x_out, img_size, return_tensor=x_is_tensor)
-        xmf_out = self.unpatchify(xmf_out, img_size, return_tensor=x_is_tensor)
+        x_out = self.unpatchify(x_out, img_size,1)
+        xmf_out = self.unpatchify(xmf_out, img_size,1)
 
         print(f"x shape after unpatchify {x.shape}")
 
