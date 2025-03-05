@@ -98,15 +98,17 @@ class ODE:
 
             # First stage (evaluate at the current time)
             model_output, model_output_xmf = _fn(t[i], samples_x, samples_xmf)
-            k1_x = model_output
-            k1_xmf = model_output_xmf
 
-            # Second stage (evaluate at the midpoint)
+            #Unsqueeze to amtch input tensors
             model_output.unsqueeze(dim=2)
             model_output_xmf.unsqueeze(dim=2)
             print(f"samples_x shape {samples_x.shape} model_output shape {model_output.shape}")
             print(f"samples_xmf shape {samples_xmf.shape} model_output_xmf shape {model_output_xmf.shape}")
 
+            k1_x = model_output
+            k1_xmf = model_output_xmf
+
+            # Second stage (evaluate at the midpoint)
             midpoint_x = samples_x + 0.5 * k1_x * dt
             midpoint_xmf = samples_xmf + 0.5 * k1_xmf * dt
             model_output, model_output_xmf = _fn(t[i] + 0.5 * dt, midpoint_x, midpoint_xmf)
