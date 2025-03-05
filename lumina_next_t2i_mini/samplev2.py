@@ -225,15 +225,16 @@ def main(args, rank, master_port):
                 samples.clamp_(0.0, 1.0)
 
                 # Save samples to disk as individual .png files
-                print(f"samplel shape {samples.shape}")
-                for i, (sample, cap) in enumerate(zip(samples, caps_list)):
-                    img = to_pil_image(sample.float())
-                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_{x}.png"
+                print(f"sample shape {samples.shape}")
+                for i, (sample, cap) in enumerate(zip(samples, caps_list)):  # Iterate over images
+                    img = to_pil_image(sample.float())  # Convert each image to PIL format
+                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_{i}.png"
                     img.save(save_path)
+
                     info.append(
                         {
                             "caption": cap,
-                            "image_url": f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}.png",
+                            "image_url": save_path,
                             "resolution": f"res: {resolution}\ntime_shift: {args.time_shifting_factor}",
                             "solver": args.solver,
                             "num_sampling_steps": args.num_sampling_steps,
