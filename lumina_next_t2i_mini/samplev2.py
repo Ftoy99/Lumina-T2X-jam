@@ -181,11 +181,11 @@ def main(args, rank, master_port):
                 latent_w, latent_h = w // 8, h // 8
 
                 # Latent
-                z = torch.randn([1, 4, 5, latent_w, latent_h], device="cuda").to(dtype)
+                z = torch.randn([1, 4, 1, latent_w, latent_h], device="cuda").to(dtype)
                 z = z.repeat(n * 2, 1, 1, 1, 1)
 
                 # Latent Motion Noise
-                zmf = torch.randn([1, 4, 5, latent_w, latent_h], device="cuda").to(dtype)
+                zmf = torch.randn([1, 4, 1, latent_w, latent_h], device="cuda").to(dtype)
                 zmf = zmf.repeat(n * 2, 1, 1, 1, 1)
 
                 with torch.no_grad():
@@ -228,7 +228,7 @@ def main(args, rank, master_port):
                 print(f"sample shape {samples.shape}")
                 for i, (sample, cap) in enumerate(zip(samples, caps_list)):  # Iterate over images
                     img = to_pil_image(sample.float())  # Convert each image to PIL format
-                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_{i}.png"
+                    save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_{idx}_{i}.png"
                     img.save(save_path)
 
                     info.append(
