@@ -206,18 +206,13 @@ class Attention(nn.Module):
     ) -> torch.Tensor:
         with torch.cuda.amp.autocast(enabled=False):
             B, N, H, D = x_in.shape  # Get batch, num tokens, heads, dim
-            x_out = torch.zeros_like(x_in)  # Initialize output tensor
+            print("freqs_cis shape:", freqs_cis.shape)
 
-            for i in range(0, N, chunk_size):
-                x_chunk = x_in[:, i:i + chunk_size]  # Select a chunk of 1024 tokens
-                freqs_chunk = freqs_cis[:, i:i + chunk_size].unsqueeze(2)  # Match shape
 
-                x_complex = torch.view_as_complex(x_chunk.float().reshape(*x_chunk.shape[:-1], -1, 2))
-                x_rotated = torch.view_as_real(x_complex * freqs_chunk).flatten(3)
-
-                x_out[:, i:i + chunk_size] = x_rotated.type_as(x_in)  # Store result in output tensor
-
-            return x_out
+            x = torch.view_as_complex(x_in.float().reshape(*x_in.shape[:-1], -1, 2))
+            freqs_cis = freqs_cis.unsqueeze(2)
+            x_out = torch.view_as_real(x * freqs_cis).flatten(3)
+            return x_out.type_as(x_in)
 
     def forward(
             self,
