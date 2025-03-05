@@ -652,11 +652,16 @@ class NextDiT(nn.Module):
         self.freqs_cis = self.freqs_cis.to(x[0].device)
         if isinstance(x, torch.Tensor):
             pH = pW = self.patch_size
-            B, C, H, W = x.size()
-            x = x.view(B, C, H // pH, pH, W // pW, pW).permute(0, 2, 4, 1, 3, 5).flatten(3)
-            x = self.x_embedder(x)
-            x = x.flatten(1, 2)
+            # B, C, H, W = x.size()
+            B, C, F, H, W = x.size()
+            # Create the patches
+            x = x.view(B, C, F, H // pH, pH, W // pW, pW)  # B C Hn H Wn W # new B C F Hn H Wn W
+            x = x.permute(0, 3, 5, 2, 1, 4, 6)  # B Hn Wn C H W # B Hn Wn C F H W
+            x = x.flatten(4)
 
+            x = self.x_cat_emb(x)
+
+            x = x.flatten(1, 3)
             mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
 
             return (
@@ -665,52 +670,6 @@ class NextDiT(nn.Module):
                 [(H, W)] * B,
                 self.freqs_cis[: H // pH, : W // pW].flatten(0, 1).unsqueeze(0),
             )
-        else:
-            pH = pW = self.patch_size
-            x_embed = []
-            freqs_cis = []
-            img_size = []
-            l_effective_seq_len = []
-
-            for img in x:
-                C, H, W = img.size()
-                item_freqs_cis = self.freqs_cis[: H // pH, : W // pW]
-                freqs_cis.append(item_freqs_cis.flatten(0, 1))
-                img_size.append((H, W))
-                img = img.view(C, H // pH, pH, W // pW, pW).permute(1, 3, 0, 2, 4).flatten(2)
-                img = self.x_embedder(img)
-                img = img.flatten(0, 1)
-                l_effective_seq_len.append(len(img))
-                x_embed.append(img)
-
-            max_seq_len = max(l_effective_seq_len)
-            mask = torch.zeros(len(x), max_seq_len, dtype=torch.int32, device=x[0].device)
-            padded_x_embed = []
-            padded_freqs_cis = []
-            for i, (item_embed, item_freqs_cis, item_seq_len) in enumerate(
-                    zip(x_embed, freqs_cis, l_effective_seq_len)
-            ):
-                item_embed = torch.cat(
-                    [
-                        item_embed,
-                        self.pad_token.view(1, -1).expand(max_seq_len - item_seq_len, -1),
-                    ],
-                    dim=0,
-                )
-                item_freqs_cis = torch.cat(
-                    [
-                        item_freqs_cis,
-                        item_freqs_cis[-1:].expand(max_seq_len - item_seq_len, -1),
-                    ],
-                    dim=0,
-                )
-                padded_x_embed.append(item_embed)
-                padded_freqs_cis.append(item_freqs_cis)
-                mask[i][:item_seq_len] = 1
-
-            x_embed = torch.stack(padded_x_embed, dim=0)
-            freqs_cis = torch.stack(padded_freqs_cis, dim=0)
-            return x_embed, mask, img_size, freqs_cis
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
         """
