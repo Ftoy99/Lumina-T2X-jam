@@ -104,7 +104,7 @@ def main(args, rank, master_port):
     if dist.get_rank() == 0:
         print(f"Creating DiT: {train_args.model}")
     # latent_size = train_args.image_size // 8
-    model = models.__dict__[train_args.model+"_v2"](
+    model = models.__dict__[train_args.model + "_v2"](
         qk_norm=train_args.qk_norm,
         cap_feat_dim=cap_feat_dim,
         use_flash_attn=args.use_flash_attn,
@@ -207,16 +207,15 @@ def main(args, rank, master_port):
                     model_kwargs["base_seqlen"] = None
 
                 if do_extrapolation and args.scaling_method == "Time-aware":
-                    model_kwargs["scale_factor"] = math.sqrt(w * h / train_args.image_size**2)
+                    model_kwargs["scale_factor"] = math.sqrt(w * h / train_args.image_size ** 2)
                     model_kwargs["scale_watershed"] = args.scaling_watershed
                 else:
                     model_kwargs["scale_factor"] = 1.0
                     model_kwargs["scale_watershed"] = 1.0
 
-                samples = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
-                    z,zmf, model.forward_with_cfg, **model_kwargs
-                )[-1]
-                samples = samples[:1]
+                samples, samples_xmf = ODE(args.num_sampling_steps, args.solver, args.time_shifting_factor).sample(
+                    z, zmf, model.forward_with_cfg, **model_kwargs
+                )
 
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
                 samples = samples.squeeze(dim=2)
@@ -279,7 +278,7 @@ if __name__ == "__main__":
         type=str,
         default="samples",
         help="If specified, overrides the default image save path "
-        "(sample{_ema}.png in the model checkpoint directory).",
+             "(sample{_ema}.png in the model checkpoint directory).",
     )
     parser.add_argument(
         "--time_shifting_factor",
