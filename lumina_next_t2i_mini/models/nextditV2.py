@@ -202,13 +202,22 @@ class Attention(nn.Module):
     def apply_rotary_emb(
             x_in: torch.Tensor,
             freqs_cis: torch.Tensor,
+            chunk_size: int = 1024  # Process 1024 tokens at a time
     ) -> torch.Tensor:
-        print(f"x_in shape is {x_in.shape}")
         with torch.cuda.amp.autocast(enabled=False):
-            x = torch.view_as_complex(x_in.float().reshape(*x_in.shape[:-1], -1, 2))
-            freqs_cis = freqs_cis.unsqueeze(2)
-            x_out = torch.view_as_real(x * freqs_cis).flatten(3)
-            return x_out.type_as(x_in)
+            B, N, H, D = x_in.shape  # Get batch, num tokens, heads, dim
+            x_out = torch.zeros_like(x_in)  # Initialize output tensor
+
+            for i in range(0, N, chunk_size):
+                x_chunk = x_in[:, i:i + chunk_size]  # Select a chunk of 1024 tokens
+                freqs_chunk = freqs_cis[:, i:i + chunk_size].unsqueeze(2)  # Match shape
+
+                x_complex = torch.view_as_complex(x_chunk.float().reshape(*x_chunk.shape[:-1], -1, 2))
+                x_rotated = torch.view_as_real(x_complex * freqs_chunk).flatten(3)
+
+                x_out[:, i:i + chunk_size] = x_rotated.type_as(x_in)  # Store result in output tensor
+
+            return x_out
 
     def forward(
             self,
@@ -780,11 +789,10 @@ class NextDiT(nn.Module):
         freqs = torch.outer(timestep, freqs).float()  # type: ignore
         freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
 
-        freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)  # Height
-        freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)  # Width
-        freqs_cis_t = freqs_cis.view(1, 1, dim // 4, end).repeat(end, end, 1, 1)  # Time
+        freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)
+        freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)
+        freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w], dim=-1).flatten(2)
 
-        freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w, freqs_cis_t], dim=-1).flatten(2)
         return freqs_cis
 
     def parameter_count(self) -> int:
