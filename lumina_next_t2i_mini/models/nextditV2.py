@@ -199,34 +199,34 @@ class Attention(nn.Module):
         return freqs_cis.view(*shape)
 
     @staticmethod
-    def apply_3d_rotary_emb(x: torch.Tensor, freqs_cis_x: torch.Tensor, freqs_cis_y: torch.Tensor,
-                            freqs_cis_t: torch.Tensor):
+    def apply_rotary_emb(
+            x_in: torch.Tensor,
+            freqs_cis: torch.Tensor,
+    ) -> torch.Tensor:
         """
-        Apply 3D Rotary Positional Embedding (3D-RoPE) to an input tensor.
+        Apply rotary embeddings to input tensors using the given frequency
+        tensor.
+
+        This function applies rotary embeddings to the given query 'xq' and
+        key 'xk' tensors using the provided frequency tensor 'freqs_cis'. The
+        input tensors are reshaped as complex numbers, and the frequency tensor
+        is reshaped for broadcasting compatibility. The resulting tensors
+        contain rotary embeddings and are returned as real tensors.
 
         Args:
-            x (torch.Tensor): Input tensor of shape (B, H, W, T, C).
-            freqs_cis_x (torch.Tensor): Precomputed RoPE frequencies for x-dimension.
-            freqs_cis_y (torch.Tensor): Precomputed RoPE frequencies for y-dimension.
-            freqs_cis_t (torch.Tensor): Precomputed RoPE frequencies for t-dimension.
+            x_in (torch.Tensor): Query or Key tensor to apply rotary embeddings.
+            freqs_cis (torch.Tensor): Precomputed frequency tensor for complex
+                exponentials.
 
         Returns:
-            torch.Tensor: Tensor with applied 3D-RoPE encoding.
+            Tuple[torch.Tensor, torch.Tensor]: Tuple of modified query tensor
+                and key tensor with rotary embeddings.
         """
-        B, H, W, T, C = x.shape
-        Cx, Cy, Ct = C * 3 // 8, C * 3 // 8, C * 2 // 8  # Channel split
-
-        def apply_rope(x_part, freqs):
-            x_part = x_part.reshape(B, -1, 2)  # Convert last dim into complex pairs
-            x_part = torch.view_as_complex(x_part) * freqs.unsqueeze(0)  # Apply rotation
-            return torch.view_as_real(x_part).reshape(B, *x_part.shape[1:-1], -1)  # Convert back
-
-        x_x, x_y, x_t = x[..., :Cx], x[..., Cx:Cx + Cy], x[..., Cx + Cy:]
-        x_x = apply_rope(x_x, freqs_cis_x)
-        x_y = apply_rope(x_y, freqs_cis_y)
-        x_t = apply_rope(x_t, freqs_cis_t)
-
-        return torch.cat([x_x, x_y, x_t], dim=-1)
+        with torch.cuda.amp.autocast(enabled=False):
+            x = torch.view_as_complex(x_in.float().reshape(*x_in.shape[:-1], -1, 2))
+            freqs_cis = freqs_cis.unsqueeze(2)
+            x_out = torch.view_as_real(x * freqs_cis).flatten(3)
+            return x_out.type_as(x_in)
 
     def forward(
             self,
@@ -259,9 +259,8 @@ class Attention(nn.Module):
         xk = xk.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
         xv = xv.view(bsz, seqlen, self.n_local_kv_heads, self.head_dim)
 
-        # Updated rotary embedding application
-        xq = Attention.apply_3d_rotary_emb(xq, *freqs_cis)
-        xk = Attention.apply_3d_rotary_emb(xk, *freqs_cis)
+        xq = Attention.apply_rotary_emb(xq, freqs_cis=freqs_cis)
+        xk = Attention.apply_rotary_emb(xk, freqs_cis=freqs_cis)
 
         xq, xk = xq.to(dtype), xk.to(dtype)
 
@@ -609,12 +608,9 @@ class NextDiT(nn.Module):
             layer.attention.use_flash_attn = use_flash_attn
 
         assert (dim // n_heads) % 4 == 0, "2d rope needs head dim to be divisible by 4"
-        # Updated frequency precomputation
-        self.freqs_cis = NextDiT.precompute_3d_freqs_cis(
+        self.freqs_cis = NextDiT.precompute_freqs_cis(
             dim // n_heads,
-            end_x=384,  # Replace with appropriate end_x value
-            end_y=384,  # Replace with appropriate end_y value
-            end_t=384,  # Replace with appropriate end_t value
+            384,
             scale_factor=scale_factor,
         )
         self.dim = dim
@@ -638,7 +634,8 @@ class NextDiT(nn.Module):
 
     def patchify_and_embed(
             self, x: List[torch.Tensor] | torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, List[Tuple[int, int]]]:
+    ) -> Tuple[torch.Tensor, torch.Tensor, List[Tuple[int, int]], torch.Tensor]:
+        self.freqs_cis = self.freqs_cis.to(x[0].device)
         if isinstance(x, torch.Tensor):
             pH = pW = self.patch_size
             # B, C, H, W = x.size()
@@ -656,7 +653,8 @@ class NextDiT(nn.Module):
             return (
                 x,
                 mask,
-                [(H, W)] * B
+                [(H, W)] * B,
+                self.freqs_cis[: H // pH, : W // pW].flatten(0, 1).unsqueeze(0),
             )
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
@@ -669,8 +667,8 @@ class NextDiT(nn.Module):
 
         # Concat x and motion flow to pass together
         x = torch.concat((x, xmf), 1)
-        x, mask, img_size = self.patchify_and_embed(x)
-        print(f"Testing shape of patchify x {x.shape}")
+        x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
+        freqs_cis = freqs_cis.to(x.device)
 
         t = self.t_embedder(t)  # (N, D)
         cap_mask_float = cap_mask.float().unsqueeze(-1)
@@ -681,16 +679,13 @@ class NextDiT(nn.Module):
 
         cap_mask = cap_mask.bool()
         for layer in self.layers:
-            x = layer(x, mask, self.freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
+            x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
-        print(f"x_out shape {x_out.shape}")
-        print(f"x_out shape {xmf_out.shape}")
+
         x_out = self.unpatchify(x_out, img_size)
         xmf_out = self.unpatchify(xmf_out, img_size)
-        print(f"x_out shape {x_out.shape}")
-        print(f"x_out shape {xmf_out.shape}")
         if self.learn_sigma:
             if x_is_tensor:
                 x_out, _ = x_out.chunk(2, dim=1)
@@ -718,14 +713,14 @@ class NextDiT(nn.Module):
         for classifier-free guidance.
         """
         # # https://github.com/openai/glide-text2im/blob/main/notebooks/text2im.ipynb
-        # Updated frequency precomputation
-        self.freqs_cis = NextDiT.precompute_3d_freqs_cis(
+        self.freqs_cis = NextDiT.precompute_freqs_cis(
             self.dim // self.n_heads,
-            end_x=384,  # Replace with appropriate end_x value
-            end_y=384,  # Replace with appropriate end_y value
-            end_t=384,  # Replace with appropriate end_t value
+            384,
             scale_factor=scale_factor,
+            scale_watershed=scale_watershed,
+            timestep=t[0].item(),
         )
+
         if proportional_attn:
             assert base_seqlen is not None
             for layer in self.layers:
@@ -760,29 +755,32 @@ class NextDiT(nn.Module):
         return output
 
     @staticmethod
-    def precompute_3d_freqs_cis(
+    def precompute_freqs_cis(
             dim: int,
-            end_x: int,
-            end_y: int,
-            end_t: int,
+            end: int,
             theta: float = 10000.0,
             scale_factor: float = 1.0,
             scale_watershed: float = 1.0,
             timestep: float = 1.0,
     ):
         """
-        Precompute frequency tensors for 3D-RoPE (x, y, t dimensions) separately.
+        Precompute the frequency tensor for complex exponentials (cis) with
+        given dimensions.
+
+        This function calculates a frequency tensor with complex exponentials
+        using the given dimension 'dim' and the end index 'end'. The 'theta'
+        parameter scales the frequencies. The returned tensor contains complex
+        values in complex64 data type.
 
         Args:
-            dim (int): Total dimension of the frequency tensor.
-            end_x (int): End index for the x-dimension.
-            end_y (int): End index for the y-dimension.
-            end_t (int): End index for the t-dimension.
-            theta (float, optional): Scaling factor for frequency computation. Defaults to 10000.0.
+            dim (int): Dimension of the frequency tensor.
+            end (int): End index for precomputing frequencies.
+            theta (float, optional): Scaling factor for frequency computation.
+                Defaults to 10000.0.
 
         Returns:
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-                Frequency tensors for x, y, and t dimensions.
+            torch.Tensor: Precomputed frequency tensor with complex
+                exponentials.
         """
 
         if timestep < scale_watershed:
@@ -793,20 +791,19 @@ class NextDiT(nn.Module):
             ntk_factor = scale_factor
 
         theta = theta * ntk_factor
-        Cx, Cy, Ct = dim * 3 // 8, dim * 3 // 8, dim * 2 // 8  # Channel split
+        freqs = 1.0 / (theta ** (torch.arange(0, dim, 4)[: (dim // 4)].float().cuda() / dim)) / linear_factor
 
-        def compute_freqs(end, C):
-            freqs = 1.0 / (theta ** (torch.arange(0, C, 4)[: (C // 4)].float().cuda() / C)) / linear_factor
-            timestep = torch.arange(end, device=freqs.device, dtype=torch.float)
-            freqs = torch.outer(timestep, freqs).float()
-            return torch.polar(torch.ones_like(freqs), freqs)  # Complex64
+        timestep = torch.arange(end, device=freqs.device, dtype=torch.float)  # type: ignore
 
-        # Compute frequencies for each dimension
-        freqs_cis_x = compute_freqs(end_x, Cx)
-        freqs_cis_y = compute_freqs(end_y, Cy)
-        freqs_cis_t = compute_freqs(end_t, Ct)
+        freqs = torch.outer(timestep, freqs).float()  # type: ignore
+        freqs_cis = torch.polar(torch.ones_like(freqs), freqs)  # complex64
 
-        return freqs_cis_x, freqs_cis_y, freqs_cis_t
+        freqs_cis_h = freqs_cis.view(end, 1, dim // 4, 1).repeat(1, end, 1, 1)
+        freqs_cis_w = freqs_cis.view(1, end, dim // 4, 1).repeat(end, 1, 1, 1)
+        freqs_cis = torch.cat([freqs_cis_h, freqs_cis_w], dim=-1).flatten(2)
+
+        return freqs_cis
+
     def parameter_count(self) -> int:
         total_params = 0
 
