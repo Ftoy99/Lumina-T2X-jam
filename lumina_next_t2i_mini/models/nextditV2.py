@@ -638,8 +638,7 @@ class NextDiT(nn.Module):
 
     def patchify_and_embed(
             self, x: List[torch.Tensor] | torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, List[Tuple[int, int]], torch.Tensor]:
-        self.freqs_cis = self.freqs_cis.to(x[0].device)
+    ) -> Tuple[torch.Tensor, torch.Tensor, List[Tuple[int, int]]]:
         if isinstance(x, torch.Tensor):
             pH = pW = self.patch_size
             # B, C, H, W = x.size()
@@ -657,8 +656,7 @@ class NextDiT(nn.Module):
             return (
                 x,
                 mask,
-                [(H, W)] * B,
-                self.freqs_cis[: H // pH, : W // pW].flatten(0, 1).unsqueeze(0),
+                [(H, W)] * B
             )
 
     def forward(self, x, xmf, t, cap_feats, cap_mask):
@@ -671,9 +669,8 @@ class NextDiT(nn.Module):
 
         # Concat x and motion flow to pass together
         x = torch.concat((x, xmf), 1)
-        x, mask, img_size, freqs_cis = self.patchify_and_embed(x)
+        x, mask, img_size = self.patchify_and_embed(x)
         print(f"Testing shape of patchify x {x.shape}")
-        freqs_cis = freqs_cis.to(x.device)
 
         t = self.t_embedder(t)  # (N, D)
         cap_mask_float = cap_mask.float().unsqueeze(-1)
@@ -684,7 +681,7 @@ class NextDiT(nn.Module):
 
         cap_mask = cap_mask.bool()
         for layer in self.layers:
-            x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
+            x = layer(x, mask, self.freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
