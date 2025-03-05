@@ -220,7 +220,7 @@ def main(args, rank, master_port):
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
                 print(samples.shape)
                 samples = samples[:1]
-                samples = samples.squeeze(dim=0)
+                samples = samples.squeeze(dim=0).permute(1, 0, 2, 3)
                 print(samples.shape)
 
                 samples = vae.decode(samples / factor).sample
@@ -231,7 +231,7 @@ def main(args, rank, master_port):
                 for i, (sample, cap) in enumerate(zip(samples, caps_list)):
                     print(f"sampel dimensions {samples.shape}")
                     for x in range(sample.shape[0]):
-                        print(sample[x])
+                        print(sample[x].shape)
                         img = to_pil_image(sample[x].float())
                         save_path = f"{args.image_save_path}/images/{args.solver}_{args.num_sampling_steps}_{sample_id}_{x}.png"
                         img.save(save_path)
