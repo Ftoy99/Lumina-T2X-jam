@@ -220,6 +220,7 @@ def main(args, rank, master_port):
                 factor = 0.18215 if train_args.vae != "sdxl" else 0.13025
                 print(samples.shape)
                 samples = samples.squeeze(dim=2)
+                samples = samples[:1]
                 print(samples.shape)
 
                 samples = vae.decode(samples / factor).sample
