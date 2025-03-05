@@ -112,6 +112,8 @@ class ODE:
             midpoint_x = samples_x + 0.5 * k1_x * dt
             midpoint_xmf = samples_xmf + 0.5 * k1_xmf * dt
             model_output, model_output_xmf = _fn(t[i] + 0.5 * dt, midpoint_x, midpoint_xmf)
+            model_output = model_output.unsqueeze(dim=2)
+            model_output_xmf =model_output_xmf.unsqueeze(dim=2)
             k2_x = model_output
             k2_xmf = model_output_xmf
 
