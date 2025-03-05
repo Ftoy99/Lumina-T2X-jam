@@ -238,6 +238,7 @@ def main(args, rank, master_port):
                     out.release()
 
                 # Save samples_xmf to disk as individual .png files
+                samples.squeeze(dim=2)
                 for i, (decoded_mf_vid, cap) in enumerate(zip(decoded_mf, caps_list)):
                     save_path = f"{args.image_save_path}/videos/{args.solver}_{args.num_sampling_steps}_{sample_id}_mf.mp4"
                     F, H, W, _ = decoded_mf_vid.shape
