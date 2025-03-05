@@ -659,7 +659,7 @@ class NextDiT(nn.Module):
             x = x.permute(0, 3, 5, 2, 1, 4, 6)  # B Hn Wn C H W # B Hn Wn C F H W
             x = x.flatten(4)
 
-            x = self.x_embedder(x)
+            x = self.x_cat_emb(x)
 
             x = x.flatten(1, 3)
             mask = torch.ones(x.shape[0], x.shape[1], dtype=torch.int32, device=x.device)
@@ -678,11 +678,6 @@ class NextDiT(nn.Module):
         y: (N,) tensor of class labels
         """
         x_is_tensor = isinstance(x, torch.Tensor)
-
-        #
-
-        test_x, _, _, _ = self.patchify_and_embed(x)
-        print(f"Testing shape of patchify test_x {test_x.shape}")
 
         # Concat x and motion flow to pass together
         x = torch.concat((x, xmf), 1)
