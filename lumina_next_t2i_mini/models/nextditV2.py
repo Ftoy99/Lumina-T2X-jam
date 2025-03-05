@@ -684,10 +684,12 @@ class NextDiT(nn.Module):
 
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
-
+        print(f"x_out shape {x_out.shape}")
+        print(f"x_out shape {xmf_out.shape}")
         x_out = self.unpatchify(x_out, img_size)
         xmf_out = self.unpatchify(xmf_out, img_size)
-
+        print(f"x_out shape {x_out.shape}")
+        print(f"x_out shape {xmf_out.shape}")
         if self.learn_sigma:
             if x_is_tensor:
                 x_out, _ = x_out.chunk(2, dim=1)

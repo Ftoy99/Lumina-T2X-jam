@@ -779,11 +779,9 @@ class NextDiT(nn.Module):
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
         x = self.final_layer(x, adaln_input)
-
-        print(f"x shape before unpatchify {x.shape}")
-
+        print(f"x shape {x.shape}")
         x = self.unpatchify(x, img_size, return_tensor=x_is_tensor)
-        print(f"x shape after unpatchify {x.shape}")
+        print(f"x shape {x.shape}")
         if self.learn_sigma:
             if x_is_tensor:
                 x, _ = x.chunk(2, dim=1)
