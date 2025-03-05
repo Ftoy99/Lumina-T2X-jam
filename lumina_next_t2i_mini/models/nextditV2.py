@@ -696,6 +696,8 @@ class NextDiT(nn.Module):
         for layer in self.layers:
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
+        print(f"x.shape before final layer {x.shape}")
+
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
 
