@@ -619,8 +619,7 @@ class NextDiT(nn.Module):
         self.pad_token = nn.Parameter(torch.empty(dim))
         nn.init.normal_(self.pad_token, std=0.02)
 
-    def unpatchify(self, x: torch.Tensor, img_size: List[Tuple[int, int]], frames, return_tensor=False) -> List[
-        torch.Tensor]:
+    def unpatchify(self, x: torch.Tensor, img_size: List[Tuple[int, int]]):
         """
         x: (N, T, patch_size**2 * C)
         imgs: (N, H, W, C)
@@ -628,30 +627,9 @@ class NextDiT(nn.Module):
         pH = pW = self.patch_size
         H, W = img_size[0]
         B = x.size(0)
-        F = frames
-        # Compute number of patches per frame
-        Hn, Wn = H // pH, W // pW
-        L = Hn * Wn * frames  # Total patches per sample
-
-        # Original
-        #     H, W = img_size[0]
-        #     B = x.size(0)
-        #     L = (H // pH) * (W // pW)
-        #     x = x[:, :L].view(B, H // pH, W // pW, pH, pW, self.out_channels)
-        #     x = x.permute(0, 5, 1, 3, 2, 4).flatten(4, 5).flatten(2, 3)
-        #     return x
-
-        x = x[:, :L]  # Remains the same meaning this is ok we have as many patches as we should have.
-
-        x = x.view(B, Hn, Wn, F, pH, pW, self.out_channels)
-
-        x = x.permute(0, 6, 3, 1, 4, 2, 5)
-        # B C F Hn pH Wn pW
-        # 0 1 2 3  4  5  6
-
-        x = x.flatten(3, 4)
-        x = x.flatten(4, 5)
-
+        L = (H // pH) * (W // pW)
+        x = x[:, :L].view(B, H // pH, W // pW, pH, pW, self.out_channels)
+        x = x.permute(0, 5, 1, 3, 2, 4).flatten(4, 5).flatten(2, 3)
         return x
 
     def patchify_and_embed(
@@ -704,17 +682,11 @@ class NextDiT(nn.Module):
         for layer in self.layers:
             x = layer(x, mask, freqs_cis, cap_feats, cap_mask, adaln_input=adaln_input)
 
-        print(f"x.shape before final layer {x.shape}")
-
         x_out = self.final_layer(x, adaln_input)
         xmf_out = self.final_layer_xmf(x, adaln_input)
 
-        print(f"x shape before unpatchify {x.shape}")
-
-        x_out = self.unpatchify(x_out, img_size,1)
-        xmf_out = self.unpatchify(xmf_out, img_size,1)
-
-        print(f"x shape after unpatchify {x.shape}")
+        x_out = self.unpatchify(x_out, img_size)
+        xmf_out = self.unpatchify(xmf_out, img_size)
 
         if self.learn_sigma:
             if x_is_tensor:
